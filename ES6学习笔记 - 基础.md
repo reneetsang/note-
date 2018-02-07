@@ -1,4 +1,4 @@
-## ES6学习笔记 — 基础知识
+## ES6学习笔记-基础
 
 #### let基础语法
 
@@ -130,5 +130,54 @@
    }
    ```
 
-   ​
+
+#### const的基础语法
+
+const的细节知识点和let一样，和let的主要区别在于：let是创建变量，const是创建常量
+
+> 变量：值可以修改
+>
+> 常量：值不可修改
+
+```javascript
+let num=12;
+num =13;
+console.log(num); // 13
+
+const str='学习'；
+str='笔记'； //使用babel如果遇到了const设置的常量再进行修改，就会无法进行编译了
+console.log(str); //报错
+```
+
+#### JS中创建变量方式汇总
+
+> ` var`：ES5中创建变量
+>
+> `function`：ES中创建函数
+>
+> ES5中创建变量或者函数存在变量提升、重复声明等特征，但没有块级作用域的机制
+
+> `let`：ES6中创建变量
+>
+> `const`：ES6创建常量
+>
+> ES6中创建的变量或者常量都不可以变量提升，也不可以重复声明，还存在块级作用域
+
+> `class`：ES6中创建类的方式
+>
+> `import`：ES6中模块导入的方式
+
+```javascript
+class Parent{
+  constructor(){
+    //->this.xxx=xxx;
+  }
+  
+  //Parent.prototype
+  aa(){}
+  
+  //Parent own property
+  static bb(){}
+}
+```
 
