@@ -15,7 +15,7 @@ let fn=>(x,y)=>x+y;
 > 箭头函数不支持arguments
 
 ```javascript
-//传统函数只是arguments
+//传统函数支持arguments
 let fn=function(){
   let arg=Array.prototype.slice.call(arguments);
   return eval(arg.join('+'));
@@ -23,7 +23,7 @@ let fn=function(){
 
 let fn=(...arg)=>{
   //console.log(arguments); ->报错
-  //不支持arguments，但可以使用ES6中的剩余运算符...来获取传递进来的所有参数值（好处：使用剩余运算符接收的结果本身十个数组，不需要再转换了）
+  //不支持arguments，但可以使用ES6中的剩余运算符...来获取传递进来的所有参数值（好处：使用剩余运算符接收的结果本身是个数组，不需要再转换了）
   //console.log(arg instanceof Array); //true
   return eval(arg.join('+'));
 }
