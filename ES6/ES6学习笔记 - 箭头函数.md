@@ -27,7 +27,7 @@ let fn=(...arg)=>{
   //console.log(arg instanceof Array); //true
   return eval(arg.join('+'));
 }
-//也可以放fn简写成下面方式
+//也可以把fn简写成下面方式
 //let fn=(...arg)=>eval(arg.join('+'));
 console.log(fn(10,20,30,40))
 ```

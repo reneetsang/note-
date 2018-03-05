@@ -30,7 +30,7 @@ let [,[,A],[,B,[,C]]]=[12,[23,34],[45,56,[66,88]]]
 
 ```javascript
 let [D]=[1,2,3];
-//D:12
+//D:1
 
 let [,E]=[12,13,14];
 //E:13
@@ -95,10 +95,55 @@ console.log(arg===obj);// false
 console.log(arg.score===obj.score);// ture
 ```
 
+> 深拷贝
+
+```javascript
+let school = {
+    name:{name:'zfpx'},
+    age:9,
+    address:'珠峰',
+    arr:['1','2','3']
+}
+let newSchool = JSON.parse(JSON.stringify(school));
+school.name.name = 'zf';
+console.log(newSchool);
+//但遇上对象里的值是函数就不行了
+```
+
+> 拷贝递归
+
+```javascript
+let school = {
+    name:{name:'zfpx'},
+    age:9,
+    address:'珠峰',
+    arr:[{name:1},'2','3']
+}
+function deepClone(parent,c){ // parent是要拷贝的对象
+    let child = c||{};
+    for(let key in parent){
+        if(parent.hasOwnProperty(key)){
+            let val = parent[key];
+            if(typeof val === 'object'){
+                child[key] = Object.prototype.toString.call(val)==='[object Array]'?[]:{}
+                deepClone(parent[key],child[key]); // [1,2,3] // []
+            }else{
+               child[key] = parent[key]; // 处理普通属性的
+            }
+        }
+    }
+    return child;
+}
+console.log(deepClone(school));
+
+```
+
+
+
 ```javascript
 let {name:A,age:B}={name:'renee',age:18};
 //A:'renee' B:18
-//在对象的解构赋值中，可以把对象的属性名起一个小名（A和B相当于小名或者别名）
+//在对象的解构赋值中，可以把对象的属性名起一个小名（A和B相当于小名或者别名，用冒号）
 ```
 
 ```javascript
@@ -163,7 +208,7 @@ animate({
 });
 ```
 
-> 在ES6中支持给函数设置默认值
+> 在ES6中支持给函数设置默认值，用等号
 
 ```javascript
 let fn=function(x)｛
