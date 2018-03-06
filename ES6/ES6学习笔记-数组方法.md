@@ -100,3 +100,5 @@ let boolean = [1,2,3,4,4,4,4,4,4,4].every(function(item,index){
 console.log(boolean);
 ```
 
+### 对象方法
+

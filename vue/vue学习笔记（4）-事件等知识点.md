@@ -223,7 +223,7 @@ vm.$watch('a',(newVal,oldVal)=>{
 </template>
 ```
 
-## v-bind 
+## v-bind 动态绑定 
 
 - 可简写成`:`
 
@@ -253,7 +253,7 @@ vm.$watch('a',(newVal,oldVal)=>{
 
   ```html
   <div :style="{backgroundColor:'red',color:'pink'">我很漂亮</div>
-  <div :style="[sty1,sty2,{fontSize30}]">我很漂亮</div>
+  <div :style="[sty1,sty2,{fontSize:'30px'}]">我很漂亮</div>
   ```
 
 ## 实现单页面开发的方式

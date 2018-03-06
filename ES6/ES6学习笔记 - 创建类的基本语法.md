@@ -30,6 +30,8 @@ var p1=new Person('renee',18)
 ```
 
 > ES6中创建类
+>
+> class的内部是通过Object.definePropterty来定义的，把公共方法定义在原型链上。把静态方法定义再类上
 
 ```javascript
 console.log(Person); //报错 不存在变量提示
