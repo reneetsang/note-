@@ -8,7 +8,7 @@
 
 ```javascript
 let arr = Array.from({0:1,1:2,2:3,length:3})
-console.log(arr);
+console.log(arr); //[1, 2, 3]
 ```
 
 > 用[...]转化成数组，需要当前类数组有“迭代器” 
@@ -82,6 +82,23 @@ let newArr = [1,2,3,4,5,6].filter(function(item,index){
     return item<4
 });
 console.log(newArr);
+```
+
+> 原理
+
+```javascript
+Array.prototype.myFilter = function(callback){
+    let arr = [];
+    for(let i = 0;i<this.length;i++){
+        callback(this[i],i)?arr.push(this[i]):void 0;
+    }
+    return arr;
+}
+
+let filterArr = [1,2,3,4,5].myFilter(function(item,index){
+    if(item>3)return true
+});
+console.log(filterArr);
 ```
 
 #### Array.some()

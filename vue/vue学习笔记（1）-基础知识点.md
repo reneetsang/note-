@@ -15,7 +15,7 @@ npm install vue axios bootstrap
   ```javascript
   <input type='checkbox' v-model='a'> //如果是复选框，只有一个复选框的时候，会把此值转化成boolean类型，true为选中
    
-   //如果是多个checkbox，要增加value属性，并且数据类型是数组 b:[] 里面的值是value的内容
+  // 如果是多个checkbox，要增加value属性，并且数据类型是数组 b:[] 里面的值是value的内容
   <input type='checkbox' v-model='b' value='游泳'>游泳
   <input type='checkbox' v-model='b' value='爬山'>爬山
   {{b}}

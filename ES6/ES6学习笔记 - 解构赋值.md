@@ -86,7 +86,7 @@ console.log(name,arg); //'renee' {age:18,teacher:'周老师'}
 //支持拓展运算符的
 ```
 
-> 把对象进行浅克隆（只把第一级克隆了）
+> 可以使用解构赋值克隆，但只是把对象进行浅克隆（只把第一级克隆了）
 
 ```javascript
 let obj={name:'renee',age:18,teacher:'周老师',score:[99,98,97]};
@@ -95,7 +95,7 @@ console.log(arg===obj);// false
 console.log(arg.score===obj.score);// ture
 ```
 
-> 深拷贝
+> 深拷贝-使用JSON中的方法
 
 ```javascript
 let school = {
@@ -110,7 +110,7 @@ console.log(newSchool);
 //但遇上对象里的值是函数就不行了
 ```
 
-> 拷贝递归
+> 深拷贝-拷贝递归
 
 ```javascript
 let school = {
