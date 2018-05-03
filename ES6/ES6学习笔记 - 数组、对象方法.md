@@ -57,6 +57,12 @@ console.log(result);
 
 #### Array.map() 映射
 
+> map() 方法返回一个新数组，数组中的元素为原始数组元素调用函数处理后的值。
+
+```javascript
+array.map(function(currentValue,index,arr), thisValue)
+```
+
 > 原理
 
 ```javascript

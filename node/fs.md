@@ -30,7 +30,7 @@ console.log(resule.toString())
 
 爬虫时，有时候可能会获取到别的格式的页面，如gbk
 
-可以用iconv-lite来解析其他编码
+可以用`iconv-lite`来解析其他编码
 
 ```javascript
 let iconv=require('iconv-lite')
@@ -43,7 +43,7 @@ console.log(resule.toString())
 
 Buffer的乱码问题
 
-可以用模块来解决输出问题，string_decoder，不识别的不输出，先攒着
+可以用`string_decoder`模块来解决输出问题，不识别的不输出，先攒着
 
 ```javascript
 let buffer=Buffer.from('前端开发');
@@ -83,6 +83,10 @@ fs.readFile(path.join(__dirname,'1.txt'),{flag:'r'}，function(err,data){
 })
 ```
 
+### 同步读取
+
+> fs.readFileSync(path[, options])
+
 ### 异步写入文件
 
 > fs.writeFile(file, data[, options], callback)
@@ -100,6 +104,10 @@ fs.writeFile(path.join(__dirname,'1.txt'),'hello'，{mode:0o666},function(err){
   console.log(err)
 })
 ```
+
+### 同步写入
+
+> fs.writeFileSync(file, data[, options])
 
 ### 拷贝文件
 
@@ -141,6 +149,8 @@ fs.open('./1,txt','r',0600,function(err,fd){});
 ### 从指定位置处开始读取文件
 
 > fs.read(fd, buffer, offset, length, position, callback((err, bytesRead, buffer)))
+>
+> fs.read(文件描述符,读取到哪个buffer,内容从buffer的哪个位置上开始,读取文中内容的长度,读取文件的位置)
 
 ```javascript
 //比如1g的文件，先弄个内存先读取一下，然后再去写
@@ -170,6 +180,7 @@ fs.open(path.join(__dirname,'1.txt'),'r',0o666,function(err,fd){
 //写
 //如果flag是a,那写的position参数就不生效了
 fs.open(path.join(__dirname,'2.txt'),'w',0o666,function(err.fd){
+    
   //第三个参数：offset表示buffer从哪个参数开始写
   //第四个参数：length写几个
   //第五个参数：写到文件的哪个位置
