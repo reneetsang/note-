@@ -1,33 +1,50 @@
 # Redux
 
-Redux 是一个 JavaScript 应用状态管理的库，换句话说，Redux就是用来处理和管理应用的状态/数据。
+Redux 是一个 JavaScript 应用状态管理的库，当项目很复杂的时候，属性传递已经达不到我们预期，可以使用Redux 解决数据传递问题，统一状态管理。换句话说，Redux就是用来处理和管理应用的状态/数据。
+
+![redux-wrong](../images/redux-wrong.png)
+
+##　Redux设计思想
+
+- Redux是将整个应用状态存储到到一个地方，称为store
+- 里面保存一棵状态树(state tree)
+- 组件可以派发(dispatch)行为(action)给store,而不是直接通知其它组件
+- 其它组件可以通过订阅store中的状态(state)来刷新自己的视图
+
+![redux-flow](../images/redux-flow.png)
 
 ## 实现简单的Redux
 
-先来写一个简单的"redux"把
+首先来写一个简单的"redux"吧！
+
+实现把内容渲染到页面上
 
 ### 1.渲染状态
 
 ```jsx
+//数据源
 let appState={
     title: {color: 'red',text: '标题'},
     content:{color:'green',text:'内容'}
 }
+// 渲染标题
 function renderTitle(title) {
     let titleEle=document.querySelector('#title');
     titleEle.innerHTML=title.text;
     titleEle.style.color=title.color;
 }
+// 渲染内容
 function renderContent(content) {
     let contentEle=document.querySelector('#content');
     contentEle.innerHTML=content.text;
     contentEle.style.color=content.color;
 }
-function renderApp(appState) {
+// 执行渲染的方法
+function render(appState) {
     renderTitle(appState.title);
     renderContent(appState.content);
 }
-renderApp(appState);
+render(appState);
 ```
 
 ### 2.提高数据修改的门槛
@@ -35,7 +52,7 @@ renderApp(appState);
 - 状态不应该是全局的，也不应该哪个方法里直接可以更改（操作危险）
 - 一旦数据可以任意修改，所有对共享状态的操作都是不可预料的
 - 模块之间需要共享数据和数据可能被任意修改导致不可预料的结果之间有矛盾
-- 所以所有对数据的操作修改必须通过`dispatch`函数
+- 所以提供一个修改状态的`dispatch`方法，不要去直接更改状态，对数据的操作修改必须通过这个方法
 
 ```jsx
 let appState={
@@ -52,29 +69,37 @@ function renderContent(content) {
     contentEle.innerHTML=content.text;
     contentEle.style.color=content.color;
 }
-function renderApp(appState) {
+function render(appState) {
     renderTitle(appState.title);
     renderContent(appState.content);
 }
+//先定义好要做那些事情（常量） 也叫宏
+const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR';
+const UPDATE_CONTENT_CONTENT = 'UPDATE_CONTENT_CONTENT';
+
+// 派发的方法，用来更改状态
+// 派发时应该将修改的动作action提交过来，是个对象，对象里的type属性是固定必须的。
 function dispatch(action) {
     switch (action.type) {
-        case 'UPDATE_TITLE_COLOR':
+        case UPDATE_TITLE_COLOR:
             appState.title.color=action.color;    
             break;    
-        case 'UPDATE_CONTENT_CONTENT':
+        case UPDATE_CONTENT_CONTENT:
             appState.content.text=action.text;
             break;
         default:
             break;    
     }
 }
-dispatch({type:'UPDATE_TITLE_COLOR',color:'purple'});
-dispatch({type:'UPDATE_CONTENT_CONTENT',text:'新标题'});
+dispatch({type:UPDATE_TITLE_COLOR,color:'purple'});
+dispatch({type:UPDATE_CONTENT_CONTENT,text:'新标题'});
 
-renderApp(appState);
+render(appState);
 ```
 
 ### 3.分装仓库
+
+把状态放进一个容器里，将定义状态和规则的部分抽离到容器外面
 
 ```jsx
 function renderTitle(title) {
@@ -87,14 +112,14 @@ function renderContent(content) {
     contentEle.innerHTML=content.text;
     contentEle.style.color=content.color;
 }
-function renderApp(appState) {
+function render(appState) {
     renderTitle(appState.title);
     renderContent(appState.content);
 }
-
-
+// 容器
 function createStore(reducer) {
     let state;
+    // 让外面可以获取状态
     function getState() {
         return state;
     }
@@ -103,37 +128,42 @@ function createStore(reducer) {
         state=reducer(state,action);
     }
     dispatch({});
-    return {
-        getState,
-        dispatch
-    }
-
+    
+    // 将方法暴露给外面使用,将状态放到了容器中外部无法在进行更改了
+    return { getState , dispatch }
 }
+
+// 容器一般会封装成库
+// 将定义状态和规则的部分抽离到容器外面，再传进去
 let initState={
     title: {color: 'red',text: '标题'},
     content:{color:'green',text:'内容'}
 }
+const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR';
+const UPDATE_CONTENT_CONTENT = 'UPDATE_CONTENT_CONTENT';
+
 // 用户自己定义的规则，我们叫它reducer，也就是所谓的管理员
-// reducer要有两个参数， 要根据老的状态和新传递的动作算出新的状态
+// reducer要有两个参数，要根据老的状态和新传递的动作算出新的状态
 // 如果想获取默认状态，有一种方式，就是调用reducer，让每一个规则都不匹配将默认值返回
-// 在reducer中，reducer是一个纯函数，每次需要返回一个新的状态
+// 在reducer中，reducer是一个纯函数，每次需要返回一个新的状态，只承担计算 State 的功能
 let reducer=function (state=initState,action) {
     switch (action.type) {
-        case 'UPDATE_TITLE_COLOR':
+        case UPDATE_TITLE_COLOR:
             return {...state,title: {...state.title,color:action.color}};
-        case 'UPDATE_CONTENT_CONTENT':
+        case UPDATE_CONTENT_CONTENT:
         return {...state,content: {...state.content,text:action.text}};    
             break;
         default:
             return state;    
     }
 }
+
 let store=createStore(reducer);
-renderApp(store.getState());
+render(store.getState());
 setTimeout(function () {
-    store.dispatch({type:'UPDATE_TITLE_COLOR',color:'purple'});
-    store.dispatch({type:'UPDATE_CONTENT_CONTENT',text:'新标题'});
-    renderApp(store.getState());
+    store.dispatch({type:UPDATE_TITLE_COLOR,color:'purple'});
+    store.dispatch({type:UPDATE_CONTENT_CONTENT,text:'新标题'});
+    render(store.getState());
 },2000);
 ```
 
@@ -175,12 +205,7 @@ function createStore(reducer) {
         }
     }
     dispatch({});
-    return {
-        getState,
-        dispatch,
-        subscribe
-    }
-
+    return { getState,dispatch,subscribe }
 }
 let initState={
     title: {color: 'red',text: '标题'},
@@ -188,9 +213,9 @@ let initState={
 }
 let reducer=function (state=initState,action) {
     switch (action.type) {
-        case 'UPDATE_TITLE_COLOR':
+        case UPDATE_TITLE_COLOR:
             return {...state,title: {...state.title,color:action.color}};
-        case 'UPDATE_CONTENT_CONTENT':
+        case UPDATE_CONTENT_CONTENT:
         return {...state,content: {...state.content,text:action.text}};    
             break;
         default:
@@ -207,26 +232,33 @@ setTimeout(function () {
 },2000);
 ```
 
-### 基本概念
+## Redux概念解析
 
 ![redux](../images/redux.png)
 
-#### Store
+### Store
 
 Redux的核心是一个`store` ，就是保存数据的地方，可以看出是一个容器，整个应用就只能有一个store。Redux提供`createStore()`函数来生成store。
 
 ```javascript
 import { createStore } from 'redux';
-const store = createStore(fn);
+let store = createStore(fn);
 ```
 
-#### State
+上面代码中，createStore函数接受另一个函数作为参数，返回新生成的Store对象。
+
+### State
 
 store 某个节点对应的数据集合就是state。`state` 是被托管的数据，也就是每次触发监听事件，我们要操作的数据。可以通过`store.getState()`获得。
 
 Redux 规定，一个state对应一个View。State相同，则View相同。
 
-#### Action
+```jsx
+let store = createStore(fn);
+let state = store.getState();
+```
+
+### Action
 
 State 的变化，会导致 View 的变化。但是，用户接触不到 State，只能接触到 View。所以，State 的变化必须是 View 导致的。Action 就是 View 发出的通知，表示 State 应该要发生变化了。
 
@@ -236,7 +268,7 @@ Action 是一个对象。其中的`type`属性是必须的，表示 Action 的�
 { type: types.ADD_TODO , text: '读书' }
 ```
 
-####　Actor Creator
+### Actor Creator
 
 action creator 顾名思义就是用来创建 action 的，action creator 只简单的返回 action。
 
@@ -249,7 +281,7 @@ let actions = {
 }
 ```
 
-#### store.dispath(action)
+###　store.dispath(action)
 
 store.dispatch()是 View 发出 Action 的唯一方法。store.dispatch接受一个 Action 对象作为参数，将它发送出去
 
@@ -264,9 +296,9 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
  store.dispatch(actions.addTodo(e.target.value))
 ```
 
-### Redux 核心API
+## Redux 核心API
 
-#### createStore
+### createStore
 
 使用方法
 
@@ -298,4 +330,193 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
 
 - subscribe(listener)
 
-- combineReducers
+###combineReducers
+
+合并reducer，把他们合并成一个
+
+key是新状态的命名空间，值是reducer，执行后会返回一个新的reducer。
+
+```javascript
+let reducer = combineReducers({
+    c: counter,
+    t: todo
+});
+```
+
+原理：
+
+```javascript
+function combineReducers(reducers) {
+    // 第二次调用reducer ，内部会自动的把第一次的状态传递给reducer
+    return (state = {}, action) => {
+        let newState = {}
+        // reducer默认要返回一个状态，要获取counter的初始值和todo的初始值
+        for (let key in reducers) {
+            // 默认reducer俩参数 一个叫state，一个叫action
+            // 俩参数初始值是undefined, {}
+            let s = reducers[key](state[key], action);
+            newState[key] = s;
+        }
+        return newState;
+    }
+}
+```
+
+##　例子：简单的加减数量
+
+```jsx
+import React,{Component} from 'react';
+import {createStore} from '../redux';
+
+let initState = {number:0};
+// 创建需要的方法 ation-type
+const INCREMENT = 'INCREMENT';
+const DECREMENT = 'DECREMENT';
+// 创建规则
+function reducer(state = initState,action){ //{type:'IN...',count:2}
+    switch (action.type) {
+        case INCREMENT:
+            return { number:state.number + action.count};
+        case DECREMENT:
+            return { number: state.number - action.count}
+    }
+    return state;
+}
+// 创建容器
+let store = createStore(reducer);
+export default class Counter extends Component{
+    constructor(){
+        super();
+        this.state = { number: store.getState().number}
+    }
+    componentDidMount(){
+        // 组件挂载完成后 希望订阅一个更新状态的方法，只要状态发生变化，就setState更新视图
+        this.unsub = store.subscribe(()=>{
+            this.setState({ number: store.getState().number })
+        });
+    }
+    componentWillUnmount(){
+        // 移除订阅
+        this.unsub();
+    }
+    render(){
+        return <div>
+            {/* 属性和状态变了，视图才会更新，所以要放在状态里 */}
+            计数器 {this.state.number}
+            <button onClick={()=>{
+                store.dispatch({type:INCREMENT,count:2})
+            }}>+</button>
+            <button onClick={()=>{
+                store.dispatch({ type: DECREMENT, count: 1 })
+            }}>-</button>
+        </div>
+    }
+}
+```
+
+## 优化结构 
+
+一般项目里，会有一个store的文件夹，专门管理的redux的
+
+- actions 里放actorCreator的
+- reducers 里放reducer的
+  - 一般情况下，如果用combineReducers，一般会在reducers文件夹下在新建一个单独的文件(index.js)，把合并的reducer导出来再用
+- action-types.js 放常量的（想要实现的功能）
+- index.js 创建容器stores
+
+```javascript
+├── components
+│   └── Counter.js
+├── index.js
+└── store
+    ├── action-types.js
+    ├── actions
+    │   └── counter.js
+    ├── index.js
+    └── reducers
+        └── counter.js
+```
+
+## React-Redux
+
+Redux流程中，每个组建中要把状态映射到组建上，还要自己订阅和更新，很麻烦。所以React-Redux诞生了，可以实现把redux映射到组件里，还可以自动更新。
+
+#### connect()
+
+React-Redux 提供`connect`方法，是个高阶函数，用于从 UI 组件生成容器组件。connect方法调用后返回的是新组件。
+
+其中`connect`方法接受两个参数：`mapStateToProps`和`mapDispatchToProps`
+
+- mapStateToProps
+
+  映射state状态到props属性上。mapStateToProps会订阅 Store，每当state更新的时候，就会自动执行，重新计算 UI 组件的参数，从而触发 UI 组件的重新渲染。
+
+  ```javascript
+  let mapStateToProps = (state)=>{ // state就是store.getState()
+      return {n:state.c.number} // 相当于以前的store.getState().c.number 返回的结果会作为Counter的属性
+  }
+  ```
+
+- mapDispatchToProps
+
+  将dispatch方法的返回值作为属性
+
+```jsx
+import React, { Component } from 'react';
+import actions from '../store/actions/counter';
+import {connect} from 'react-redux';
+// connect方法是个高阶函数，是实现redux和组件的连接
+
+class Counter extends Component {
+    constructor() {
+        super();
+    }
+    render() {
+        return <div>
+            计数器 {this.props.n}
+            <button onClick={() => {
+                this.props.add(2)
+            }}>+</button>
+            <button onClick={() => {
+              this.props.minus(1);
+            }}>-</button>
+        </div>
+    }
+}
+
+// connect方法接受两个参数：mapStateToProps和mapDispatchToProps
+// mapStateToProps映射状态到属性
+// 将状态的返回值作为属性
+let mapStateToProps = (state)=>{ // state就是store.getState()
+    return {n:state.c.number} // 相当于以前的store.getState().c.number 返回的结果会作为Counter的属性
+}
+// mapDispatchToProps将dispatch方法 返回值作为属性
+let mapDispatchToProps = (dispatch) =>{ // dispatch是store.dispatch
+    return {
+        add(n){dispatch(actions.add(n))},
+        minus(n){dispatch(actions.minus(n))}
+    }
+}
+// connect方法调用后返回的是新组件，导出连接后的新组件给外面用
+export default connect(mapStateToProps,mapDispatchToProps)(Counter);
+```
+
+#### Provider 组件
+
+connect方法返回的是新组件容器，需要让容器组件拿到`state`对象，才能生成 UI 组件的参数。
+
+React-Redux 提供`Provider`组件，可以让容器组件拿到`state`。
+
+```jsx
+import React from 'react';
+import {render} from 'react-dom';
+import Cart from  './components/cart'
+import 'bootstrap/dist/css/bootstrap.css';
+import {Provider} from 'react-redux';
+import store from './store';
+render(<Provider store={store}>
+    <Cart></Cart>
+</Provider>,window.root);
+```
+
+`Provider`在根组件外面包了一层，这样一来，`App`的所有子组件就默认都可以拿到`state`了。
