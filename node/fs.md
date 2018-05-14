@@ -55,7 +55,7 @@ console.log(sd.write(buff1).toString());
 console.log(sd.write(buff2).toString());
 ```
 
-## fs常用方法
+## fs常用方法 - 文件操作
 
 fs fileSystem 文件系统，这里提供了很多方法，有同步和异步的
 
@@ -249,4 +249,37 @@ function copy(source,target){
 copy('1.txt','2.txt');
 ```
 
- 
+ ##　fs常用方法 - 目录操作
+
+### 创建目录
+
+>  fs.mkdir(path[, mode], callback)
+>
+> 要求父目录必须存在
+
+### 判断一个文件是否有权限访问
+
+> fs.access(path[, mode], callback)
+
+```javascript
+fs.access('/etc/passwd', fs.constants.R_OK | fs.constants.W_OK, (err) => {
+  console.log(err ? 'no access!' : 'can read/write');
+});
+```
+
+### 读取目录下所有的文件
+
+> fs.readdir(path[, options], callback)
+
+### 查看文件目录信息
+
+> fs.stat(path, callback)
+
+- stats.isFile()
+- stats.isDirectory()
+- atime(Access Time)上次被读取的时间。
+- ctime(State Change Time)：属性或内容上次被修改的时间。
+- mtime(Modified time)：档案的内容上次被修改的时间。
+
+
+

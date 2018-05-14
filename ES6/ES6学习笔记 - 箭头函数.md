@@ -93,7 +93,7 @@ obj.fn();
 
 > 箭头函数的一些扩充
 
-````javascrpt
+````javascript
 let fn=()=>{
   console.log(this);
 }

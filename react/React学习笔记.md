@@ -177,7 +177,6 @@ class Clock extends Component{
     constructor(){
         super();
         this.state = {date:new Date().toLocaleString(),name:'zfpx'}
-       
     }
     // 如果用类组件需要提供一个render方法
     // 组件渲染完成后会调用这个生命周期

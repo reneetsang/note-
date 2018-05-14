@@ -15,7 +15,7 @@ Redux 是一个 JavaScript 应用状态管理的库，当项目很复杂的时�
 
 ## 实现简单的Redux
 
-首先来写一个简单的"redux"吧！
+来写一个简单的"redux"吧！
 
 实现把内容渲染到页面上
 
@@ -362,6 +362,56 @@ function combineReducers(reducers) {
 }
 ```
 
+### context
+
+react提供一个context API，可以解决跨组件的数据传递。16.3版本以前的context和现在最新版context用法有区别。在16.3官方不推荐使用，如果某个组件shouldComponentUpdate返回了false后面的组件就不会更新了
+
+contextAPI 新的方法非常简便。
+
+```jsx
+import React from 'react';
+import {render} from 'react-dom';
+// 创建一个上下文,有两个属性 一个叫Provider 还有个叫Consume
+// createContext中的对象是默认参数
+let { Consumer,Provider} = React.createContext();
+// context 可以创建多个 这时候就不要解构了，不同的context是不能交互的
+class Title extends React.Component{
+    render(){
+        // 子类通过Consumer进行消费 内部必须是一个函数 函数的参数是Provider的value属性
+        return <Consumer>
+            {({s,h})=>{
+                return <div style={s} onClick={()=>{
+                    h('red');
+                }}>hello</div>
+            }}
+        </Consumer>
+    }
+}
+class Head extends React.Component{
+    render() {
+        return <div>
+            <Title></Title>
+        </div>
+    }
+}
+//  Provider使用在父组件上
+class App extends React.Component{
+    constructor(){
+        super();
+        this.state = {color:'green'}
+    }
+    handleClick = (newColor) =>{
+        this.setState({ color: newColor})
+    }
+    render(){
+        return <Provider value={{ s: this.state,h:this.handleClick}}>
+            <Head></Head>
+        </Provider>
+    }
+}
+render(<App></App>,window.root)
+```
+
 ##　例子：简单的加减数量
 
 ```jsx
@@ -415,6 +465,8 @@ export default class Counter extends Component{
 ```
 
 ## 优化结构 
+
+`index.js`中的代码逐渐变得冗杂。我把所有的代码都写在`index.js`中是为了起步时的简单易懂。接下来，我们来看一下如何组织Redux项目。首先，在`src`文件夹中创建一下文件和文件夹：
 
 一般项目里，会有一个store的文件夹，专门管理的redux的
 
