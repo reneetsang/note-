@@ -308,6 +308,8 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
 
   在Redux中，负责响应`action`并修改数据的角色就是`reducer`。 reducer要有两个参数 ，要根据老的状态和新传递的动作算出新的状态。`reducer`本质上是一个纯函数，每次需要返回一个新的状态对象。
 
+  纯函数很严格，也就是说你几乎除了计算数据以外什么都不能干，计算的时候还不能依赖除了函数参数以外的数据。
+
   ```javascript
   //以下为reducer的格式
   const todo = (state = initialState, action) => {
