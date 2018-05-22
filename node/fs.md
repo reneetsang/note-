@@ -87,6 +87,13 @@ fs.readFile(path.join(__dirname,'1.txt'),{flag:'r'}，function(err,data){
 
 > fs.readFileSync(path[, options])
 
+```javascript
+fs.readFile('./1.txt',{encoding:'utf8',flag:'r',},function (err,data) {
+   if(err) return console.log(err);
+   console.log(data);
+});
+```
+
 ### 异步写入文件
 
 > fs.writeFile(file, data[, options], callback)
@@ -124,12 +131,16 @@ function copy(source,target){
 }
 copy('1.txt','2.txt ')
 //如果内存只有12g，读一个20g文件肯定读不了
+```
 
-//node后来出了copy的方法，这个方法需要node8.5以上的版本，但也有内存读取撑爆的问题
+- fs.copyFile
+
+  node后来出了copy的方法，这个方法需要node8.5以上的版本，但也有内存读取撑爆的问题
+
+```javascript
 fs.copyFile(path.join(__dirname,'1.txt'),path.join(__dirname,'2.txt'),function(){
   console.log('拷贝成功')
 })
-
 ```
 
 ### 打开文件
@@ -275,8 +286,8 @@ fs.access('/etc/passwd', fs.constants.R_OK | fs.constants.W_OK, (err) => {
 
 > fs.stat(path, callback)
 
-- stats.isFile()
-- stats.isDirectory()
+- stats.isFile() 是否是文件
+- stats.isDirectory() 是否是文件夹
 - atime(Access Time)上次被读取的时间。
 - ctime(State Change Time)：属性或内容上次被修改的时间。
 - mtime(Modified time)：档案的内容上次被修改的时间。
