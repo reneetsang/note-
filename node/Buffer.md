@@ -35,7 +35,95 @@ const buf5 = Buffer.from('字符串');
 
 ## buffer常用方法
 
+### buffer.fill 
 
+手动初始化,擦干净桌子,将buffer内容清0 
+
+- buffer.fill(value[,offset[,end]][,encoding])
+
+```javascript
+buffer.fill(0);
+```
+
+### buffer.toString 
+
+- bufffer.toString([encoding[, start[, end]]]) 
+
+```javascript
+buffer.toString('utf8',3,6)
+```
+
+### buffer.write
+
+- buffer.write(string[, offset[, length]][, encoding]) 
+
+```javascript
+buffer.write('前',0,3,'utf8');
+buffer.write('端',3,3,'utf8'); //前端
+```
+
+###buffer.slice 
+
+- buf.slice([start[, end]]) 
+
+```javascript
+let newBuf = buffer.slice(0,4);
+```
+
+### buffer.copy
+
+复制Buffer 把多个buffer拷贝到一个大buffer上 
+
+- bufffer.copy(target[, targetStart[, sourceStart[, sourceEnd]]]) 
+
+```javascript
+let buf5 = Buffer.from('前端开发');
+let buf6 = Buffer.alloc(6);
+buf5.copy(buf6,0,0,4);
+buf5.copy(buf6,3,3,6);
+//buf6=前端
+```
+
+```javascript
+// 目标buffer 目标开始的拷贝位置 源的开始 源的结束位置
+Buffer.prototype.mycopy=function(target,targetStart,sourceStart,souceEnd){
+    for(var i=0;i<sourceEnd-sourceStart;i++){
+        target[i+targetStart]=this[sourceStart+i];
+    }
+}
+buffer2.mycopy(buffer1,1,3,6);
+console.log(buffer1.toString())
+```
+
+### buffer.concat
+
+- Buffer.concat(list[, totalLength]) 
+
+```javascript
+let buf1 = Buffer.from('前');
+let buf2 = Buffer.from('端');
+let buf3 = Buffer.concat([buf1,buf2],6);
+console.log(buf3.toString());
+```
+
+```javascript
+Buffer.concat = function (list,len) {
+  if(typeof len === 'undefined'){ // 求拷贝后的长度
+    len = list.reduce((current,next,index)=>{
+      return current+next.length;
+    },0);
+  }
+  let newBuffer = Buffer.alloc(len); // 申请buffer
+  let index = 0;
+  list.forEach(buffer =>{ // 将buffer一一拷贝
+    buffer.copy(newBuffer, index);
+    index+=buffer.length;
+  });
+  return newBuffer.slice(0,index); // 返回拷贝后的buffer
+}
+// 接收请求时会采用concat方法进行拼接
+console.log(Buffer.concat([buffer1, buffer2, buffer3],10).toString());
+```
 
 ## 编码转换问题 iconv-lite
 

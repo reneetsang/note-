@@ -133,9 +133,9 @@ copy('1.txt','2.txt ')
 //如果内存只有12g，读一个20g文件肯定读不了
 ```
 
-- fs.copyFile
+> fs.copyFile
 
-  node后来出了copy的方法，这个方法需要node8.5以上的版本，但也有内存读取撑爆的问题
+node后来出了copy的方法，这个方法需要node8.5以上的版本，但也有内存读取撑爆的问题
 
 ```javascript
 fs.copyFile(path.join(__dirname,'1.txt'),path.join(__dirname,'2.txt'),function(){
@@ -205,6 +205,8 @@ fs.open(path.join(__dirname,'2.txt'),'w',0o666,function(err.fd){
 ### 同步磁盘缓存
 
 > fs.fsync(fd,[callback]);
+>
+> 把内存中的内容 强制写入后再关闭文件(写入的操作是异步操作) 
 
 ```javascript
 fs.open(path.join(__dirname,'2.txt'),'w',function(err,fd){
@@ -278,10 +280,6 @@ fs.access('/etc/passwd', fs.constants.R_OK | fs.constants.W_OK, (err) => {
 });
 ```
 
-### 读取目录下所有的文件
-
-> fs.readdir(path[, options], callback)
-
 ### 查看文件目录信息
 
 > fs.stat(path, callback)
@@ -291,6 +289,38 @@ fs.access('/etc/passwd', fs.constants.R_OK | fs.constants.W_OK, (err) => {
 - atime(Access Time)上次被读取的时间。
 - ctime(State Change Time)：属性或内容上次被修改的时间。
 - mtime(Modified time)：档案的内容上次被修改的时间。
+
+```javascript
+fs.stat(dir,(err,stat)=>{
+    if(stat.isDirectory()){}
+})
+```
+
+### 读取目录下所有的文件
+
+> fs.readdir(path[, options], callback)
+
+### 移动文件或目录
+
+> fs.rename(oldPath, newPath, callback)
+
+### 删除文件
+
+> fs.unlink(path, callback)
+
+### 截断文件
+
+> fs.ftruncate(fd[, len], callback)
+
+```javascript
+const fd = fs.openSync('temp.txt', 'r+');
+// 截断文件至前4个字节
+fs.ftruncate(fd, 4, (err) => {
+  console.log(fs.readFileSync('temp.txt', 'utf8'));
+});
+```
+
+
 
 
 

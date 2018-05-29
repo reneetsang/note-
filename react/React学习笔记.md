@@ -295,3 +295,22 @@ ReactDOM.render(<Clock/>,window.root);
   - 可以操作dom，获取真实dom
   - 可以和第三方库结合，如JQ
   - 不需要对当前输入的内容进行校验，也不需要默认值
+
+###  生命周期
+
+#### componentWillMount 组件挂载之前
+
+在组件挂载之前调用且全局只调用一次。如果在这个钩子里可以setState，render后可以看到更新后的state，不会触发重复渲染。该生命周期可以发起异步请求，并setState。（*React v16.3后废弃该生命周期，可以在constructor中完成设置state*）
+
+#### componentDidMount 组件挂在完成后
+
+#### shouldComponentUpdate
+
+#### componentDidUpdate
+
+
+
+
+
+
+
