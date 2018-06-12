@@ -291,10 +291,22 @@ ReactDOM.render(<Clock/>,window.root);
 受控组件和非受控组件（state），指的都是表单元素
 
 - 受控组件，可以对输入进行监控，而且对表单进行默认值操作
+
 - 非受控组件
   - 可以操作dom，获取真实dom
   - 可以和第三方库结合，如JQ
   - 不需要对当前输入的内容进行校验，也不需要默认值
+
+##### 受控组件
+
+```javascript
+{/* 写了value 要写onChange事件更改状态或者用defaltValue，不然不会更改 */}
+<input type="text" required={true} value={this.state.a} onChange={this.handleChange} name="a"/>
+```
+
+
+
+
 
 ###  生命周期
 
