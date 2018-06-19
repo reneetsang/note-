@@ -1,6 +1,8 @@
 # Buffer
 
-JS语言没有二进制数据类型，而在处理TCP和文件流的时候，必须要处理二进制数据。NodeJS提供了一个Buffer对象来提供对二进制数据的操作，比如文件流的读写、网络请求数据的处理等。Buffer是一个全局类,无需加载就可使用。
+JS语言没有二进制数据类型，而在处理TCP和文件流的时候，必须要处理二进制数据。NodeJS提供了一个Buffer对象来提供对二进制数据的操作，比如文件流的读写、网络请求数据的处理等。
+
+Buffer是一个全局类,无需加载就可使用。Buffer 存的都是16进制的。
 
 ## 定义buffer的三种方式
 
@@ -55,7 +57,7 @@ buffer.toString('utf8',3,6)
 
 ### buffer.write
 
-- buffer.write(string[, offset[, length]][, encoding]) 
+- buffer.write(string[, offset[, length]][, encoding])  参数为 内容 偏移量 长度 编码 
 
 ```javascript
 buffer.write('前',0,3,'utf8');
@@ -64,10 +66,19 @@ buffer.write('端',3,3,'utf8'); //前端
 
 ###buffer.slice 
 
-- buf.slice([start[, end]]) 
+- buf.slice([start[, end]])  slice是浅拷贝 
 
 ```javascript
 let newBuf = buffer.slice(0,4);
+```
+
+```javascript
+// Buffer 和二维数组是一样的，Buffer存的都是内存地址，请看实例
+
+let buffer = Buffer.alloc(6, 1)
+let newBuffer = buffer.slice(0, 3)
+newBuffer[0] = 100
+console.log(buffer)
 ```
 
 ### buffer.copy
@@ -76,13 +87,17 @@ let newBuf = buffer.slice(0,4);
 
 - bufffer.copy(target[, targetStart[, sourceStart[, sourceEnd]]]) 
 
+  参数：目标buffer 引用buffer 起始为止 结束为止 复制位数 
+
 ```javascript
 let buf5 = Buffer.from('前端开发');
 let buf6 = Buffer.alloc(6);
 buf5.copy(buf6,0,0,4);
 buf5.copy(buf6,3,3,6);
-//buf6=前端
+// buf6=前端
 ```
+
+> 手写一个copy方法
 
 ```javascript
 // 目标buffer 目标开始的拷贝位置 源的开始 源的结束位置
@@ -105,6 +120,8 @@ let buf2 = Buffer.from('端');
 let buf3 = Buffer.concat([buf1,buf2],6);
 console.log(buf3.toString());
 ```
+
+> 手写一个concat方法
 
 ```javascript
 Buffer.concat = function (list,len) {
