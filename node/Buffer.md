@@ -39,7 +39,7 @@ const buf5 = Buffer.from('字符串');
 
 ### buffer.fill 
 
-手动初始化,擦干净桌子,将buffer内容清0 
+相当于手动初始化,擦干净桌子,将buffer内容清0 
 
 - buffer.fill(value[,offset[,end]][,encoding])
 
@@ -57,7 +57,7 @@ buffer.toString('utf8',3,6)
 
 ### buffer.write
 
-- buffer.write(string[, offset[, length]][, encoding])  参数为 内容 偏移量 长度 编码 
+- buffer.write(string[, offset[, length]][, encoding])  参数：内容 偏移量 长度 编码 
 
 ```javascript
 buffer.write('前',0,3,'utf8');
@@ -101,12 +101,12 @@ buf5.copy(buf6,3,3,6);
 
 ```javascript
 // 目标buffer 目标开始的拷贝位置 源的开始 源的结束位置
-Buffer.prototype.mycopy=function(target,targetStart,sourceStart,souceEnd){
+Buffer.prototype.myCopy=function(target,targetStart,sourceStart,souceEnd){
     for(var i=0;i<sourceEnd-sourceStart;i++){
         target[i+targetStart]=this[sourceStart+i];
     }
 }
-buffer2.mycopy(buffer1,1,3,6);
+buffer2.myCopy(buffer1,1,3,6);
 console.log(buffer1.toString())
 ```
 
@@ -124,7 +124,7 @@ console.log(buf3.toString());
 > 手写一个concat方法
 
 ```javascript
-Buffer.concat = function (list,len) {
+Buffer.myConcat = function (list,len) {
   if(typeof len === 'undefined'){ // 求拷贝后的长度
     len = list.reduce((current,next,index)=>{
       return current+next.length;
@@ -139,7 +139,7 @@ Buffer.concat = function (list,len) {
   return newBuffer.slice(0,index); // 返回拷贝后的buffer
 }
 // 接收请求时会采用concat方法进行拼接
-console.log(Buffer.concat([buffer1, buffer2, buffer3],10).toString());
+console.log(Buffer.myConcat([buffer1, buffer2, buffer3],10).toString());
 ```
 
 ## 编码转换问题 iconv-lite
