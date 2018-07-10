@@ -82,11 +82,11 @@ ReactDOM.render(<div>
 </div>,document.getElementById('root'));
 ```
 
-- JSX 允许直接在模板插入 JavaScript 变量。如果变量是数组，数组可以直接渲染到页面上。
+- JSX 允许直接在模板插入 JavaScript 变量。如果变量是数组，数组可以用map直接渲染到页面上。
 
 ```jsx
 let dinner = ['汉堡', '可乐', '薯条'];
-// 渲染列表要用map
+// 渲染列表要用map，用map要用key（因为dom-diff）
 let eleObj = dinner.map((item, index) => (
     <li key={index}>{item}</li>
 ));
@@ -99,7 +99,7 @@ render(eleObj, window.root);
 
 ```jsx
 let ele = (
-    <label htmlFor="a" className="focus">输入焦点</label>
+    <label htmlFor="a" className="focus">点击获取输入焦点</label>
     <input type="text" id="a"/>
 )
 ```
