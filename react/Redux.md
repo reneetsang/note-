@@ -91,6 +91,7 @@ function dispatch(action) {
             break;    
     }
 }
+// action是一个动作，是个对象{type:UPDATE_TITLE_COLOR,color:'purple'}
 dispatch({type:UPDATE_TITLE_COLOR,color:'purple'});
 dispatch({type:UPDATE_CONTENT_CONTENT,text:'新标题'});
 
@@ -99,7 +100,7 @@ render(appState);
 
 ### 3.分装仓库
 
-把状态放进一个容器里，将定义状态和规则的部分抽离到容器外面
+把状态放进一个容器里，保护起来，将定义状态和规则的部分抽离到容器外面
 
 ```jsx
 function renderTitle(title) {
@@ -116,7 +117,7 @@ function render(appState) {
     renderTitle(appState.title);
     renderContent(appState.content);
 }
-// 容器
+// 创建容器/仓库
 function createStore(reducer) {
     let state;
     // 让外面可以获取状态
@@ -125,8 +126,9 @@ function createStore(reducer) {
     }
 
     function dispatch(action) { 
-        state=reducer(state,action);
+        state=reducer(state,action); // 把新状态覆盖
     }
+    // 在创建仓库的时候派发一次动作，为了走下reducer获取初始值，写个空对象是undefined走默认值
     dispatch({});
     
     // 将方法暴露给外面使用,将状态放到了容器中外部无法在进行更改了
@@ -135,6 +137,7 @@ function createStore(reducer) {
 
 // 容器一般会封装成库
 // 将定义状态和规则的部分抽离到容器外面，再传进去
+// 初始状态
 let initState={
     title: {color: 'red',text: '标题'},
     content:{color:'green',text:'内容'}
@@ -143,7 +146,7 @@ const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR';
 const UPDATE_CONTENT_CONTENT = 'UPDATE_CONTENT_CONTENT';
 
 // 用户自己定义的规则，我们叫它reducer，也就是所谓的管理员
-// reducer要有两个参数，要根据老的状态和新传递的动作算出新的状态
+// 处理器 reducer要有两个参数，传入老的状态和新传递的动作算出新的状态
 // 如果想获取默认状态，有一种方式，就是调用reducer，让每一个规则都不匹配将默认值返回
 // 在reducer中，reducer是一个纯函数，每次需要返回一个新的状态，只承担计算 State 的功能
 let reducer=function (state=initState,action) {
@@ -167,7 +170,7 @@ setTimeout(function () {
 },2000);
 ```
 
-### 4.监控数据变化
+### 4.监控数据变化 发布订阅
 
 ```jsx
 function renderTitle(title) {
@@ -186,17 +189,17 @@ function render() {
 }
 function createStore(reducer) {
     let state;
-    let listeners=[];
+    let listeners=[]; // 订阅者
     function getState() {
         return state;
     }
 	// 发布订阅模式，先将render方法订阅好，每次dispatch时都调用订阅好的方法
     function dispatch(action) { // 发布
         state=reducer(state,action);
-        listeners.forEach(l=>l());
+        listeners.forEach(l=>l()); // 当状态变化时执行
     }
 
-    function subscribe(listener) { // 订阅
+    function subscribe(listener) { // 订阅的方法
         listeners.push(listener);
         return () => {
             // 再次调用时 移除监听函数
@@ -373,7 +376,7 @@ contextAPI 新的方法非常简便。
 ```jsx
 import React from 'react';
 import {render} from 'react-dom';
-// 创建一个上下文,有两个属性 一个叫Provider 还有个叫Consume
+// 创建一个上下文,有两个属性 一个叫Provider提供者（传递数据） 还有个叫Consume消费者（接受消费数据），可以跨级别传递数据（父->子 孙）
 // createContext中的对象是默认参数
 let { Consumer,Provider} = React.createContext();
 // context 可以创建多个 这时候就不要解构了，不同的context是不能交互的
@@ -487,7 +490,7 @@ export default class Counter extends Component{
     ├── actions
     │   └── counter.js
     ├── index.js
-    └── reducers
+    └── reducers // 专门处理自己的动作
         └── counter.js
 ```
 
@@ -513,7 +516,7 @@ React-Redux 提供`connect`方法，是个高阶函数，用于从 UI 组件生�
 
 - mapDispatchToProps
 
-  将dispatch方法的返回值作为属性
+  将dispatch方法的返回值作为属性对象
 
 ```jsx
 import React, { Component } from 'react';
@@ -553,9 +556,13 @@ let mapDispatchToProps = (dispatch) =>{ // dispatch是store.dispatch
 }
 // connect方法调用后返回的是新组件，导出连接后的新组件给外面用
 export default connect(mapStateToProps,mapDispatchToProps)(Counter);
+// mapDispatchToProps很像action，可以直接用
+export default connect(mapStateToProps,action)(Counter);
 ```
 
 #### Provider 组件
+
+是一个组件，用来接受store，再经过他的手通过context api传递给所有的子组件
 
 connect方法返回的是新组件容器，需要让容器组件拿到`state`对象，才能生成 UI 组件的参数。
 
