@@ -385,7 +385,7 @@ ReactDOM.render(<Clock/>,window.root);
 
 ###  生命周期lifeCycle
 
-有图
+![react生命周期](../images/react生命周期.png)
 
 #### componentWillMount 组件挂载之前
 

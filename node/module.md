@@ -54,11 +54,11 @@ path.sep//文件路径window用\分隔符，linux用/
 - 如果require函数只指定名称则视为从node_modules下面加载文件，这样的话你可以移动模块而不需要修改引用的模块路径
 - 第三方模块的查询路径包括module.paths和全局目录
 
-commonjs规范，规定了每一个文件都是一个模块，模块之间是相互独立的
+#### 实现module模块
 
-规范定义了，导出的时候用module.exports
-
-定义了，引用一个模块用require
+- commonjs规范，规定了每一个文件都是一个模块，模块之间是相互独立的
+- 规范定义了，导出的时候用module.exports
+- 定义了如何引用一个模块require
 
 一个模块外面会给你加了一个闭包
 
