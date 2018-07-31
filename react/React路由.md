@@ -36,7 +36,7 @@
   - 在应用中 `<Redirect>` 可以设置重定向到其他 route 而不改变旧的 URL。 
   - 重定向，如果都匹配不上就返回这个组件
 
-### this.props
+### 对象和方法
 
 如果通过Router渲染的组件，那么会有三个属性
 
@@ -53,16 +53,16 @@
     "location": {
         "pathname": "/user/1",  //路径名
         "search": "?name=zfpx", //查询字符串
-        "hash": "#top",         //hash值
+        "hash": "#top"          //hash值
         "state":undefined       //可以记录这个路径从哪里跳转过来的
     },
     "history": {
-        "length": 6,            //历史长度
-        "action": "POP",        //动作
+        "length": 6,            //number 历史长度，浏览历史堆栈中的条目数
+        "action": "POP",        //string 动作，路由跳转到当前页面执行的动作，分为 PUSH, REPLACE, POP
         "location": {           //当前应用所处的位置
-            "pathname": "/user/1",
-            "search": "?name=zfpx",
-            "hash": "#top",
+            "pathname": "/user/1", // string URL路径
+            "search": "?name=zfpx", // string URL中的查询字符串 
+            "hash": "#top", // string URL中的查询字符串
             "state":undefined  //location可以拥有与之相关的状态。这是一些固定的数据，并且不存在于URL之中
         },
         "go":f go(n),//是一个强大的方法，并包含了goForward与goBack的功能。传入负数则退后，传入正数则向前
@@ -227,7 +227,6 @@ export default class Route extends Component{
                 {
                     // 参数value就是Provider中的value
                     value => {
-                        // 电脑输入的地址
                         let {location:{pathname}}=value; // /user
                         // 跟Route中的属性比较，先解构一下
                         // component:Component起个别名，重命名一下，因为类组件需要大写
@@ -251,7 +250,7 @@ export default class Route extends Component{
 <Route path='/roster'/>
 // 当路径名为'/'时, path不匹配
 // 当路径名为'/roster'或'/roster/2'时, path匹配
-// 当你只想匹配'/roster'时，你需要使用"exact"参数来精确匹配
+// 当你只想匹配'/roster'时，你需要使用"exact"参数
 // 则路由仅匹配'/roster'而不会匹配'/roster/2'
 <Route exact path='/roster'/>
 ```
@@ -270,18 +269,18 @@ ReactDOM.render(
 ,document.getElementById('root'));
 ```
 
-#### src/react-router-dom/Route.js
+#### src/react-router-dom/Route.js 
 
 ```react
 export default class Route extends Component{
     render() {
++        let {path,component: Component,exact=false}=this.props;
++        let regexp=pathToRegexp(path,[],{end:exact});
         return (
             <Consumer>
                 {
                     value => {
                         let {pathname}=value.location;
-+        			   let {path='/',component:Component,exact=false}=this.props;
-+        			   let regexp=pathToRegexp(path,[],{end:exact});
                         if (regexp.test(pathname)) {
                             return <Component/>
                         } else {
@@ -299,8 +298,11 @@ export default class Route extends Component{
 
 路径参数，可支持匹配/user/:id
 
-          <Route path="/user" component={User} />
-          <Route path="/user/:id" component={User} />
+```
+      <Route path="/user" component={User} />
+      <Route path="/user/:id" component={User} />
+```
+
 #### src/react-router-dom/Route.js
 
 ```react
@@ -313,7 +315,10 @@ export default class Route extends Component{
             <Consumer>
                 {
                     value=>{
+                        // 电脑输入的地址
                         let {location:{pathname}}=value; // /user
+                        // 跟Route属性中的地址比较，先解构一下
+                        // component:Component起个别名，重命名一下，因为类组件需要大写
                         let {path='/',component:Component,exact=false}=this.props;
                         // 把path编译成正则
                         let keys=[]
@@ -337,6 +342,8 @@ export default class Route extends Component{
     }
 }
 ```
+
+
 
 ### Link
 
@@ -405,7 +412,7 @@ export default class Link extends Component{
     render() {
         return (
             // 返回一个A标签
-            // <Link to="/user/list">用户列表</Link> 标签是Link组件的children            			   // 用户列表是Link组件的children 可以{this.props.children}获取
+            // <Link to="/user/list">用户列表</Link> 标签是Link组件的children            			  // 用户列表是Link组件的children 可以{this.props.children}获取
             <Consumer>
                 {
                     value => {
@@ -502,6 +509,42 @@ export default class Switch extends Component{
 
 ### 页面跳转
 
+#### src/react-router-dom/api.js
+
+用户常用操作 放在这里
+
+```react
+// 为了防止this出问题 我们let一个userApi
+let userApi =  {
+	//获取所有用户
+	getUsers() {
+		let usersStr=localStorage.getItem('users');
+		return usersStr? JSON.parse(usersStr):[];
+	},
+	createUser(user) {
+         // 从缓存中读取用户列表字符串
+		let users=userApi.getUsers();
+         // 给每个对象增加一个ID号
+         user.id = users.length>0? users[users.length-1].id+1:1;
+         // 向此数组中加入新的对象
+         users.push(user);
+         // localStorage只能放字符串，需要把数组从新数列化，再把数组保存到缓存中
+         localStorage.setItem('users',JSON.stringify(users));
+	},
+	getUser(id) {
+        // 当用户ID等于我传的ID，就是我要找的对象
+		return userApi.getUsers().find(user=>user.id == id);
+	},
+	delUser(id) {
+		let users =  userApi.getUsers().filter(user => user.id!=id); 
+		localStorage.setItem('users',JSON.stringify(users));
+		return users;
+	}
+}
+
+export default userApi;
+```
+
 #### src/components/User.js
 
 ```react
@@ -529,6 +572,7 @@ export default class User extends Component{
 				<div className="col-md-10">
 					<Route path="/user/add" component={UserAdd} />
 					<Route path="/user/list" component={UserList} />
+					{/* 路径参数 */}
 					<Route path="/user/detail/:id" component={UserDetail}/>
 				</div>
 			</div>
@@ -541,22 +585,14 @@ export default class User extends Component{
 
 ```react
 import React,{Component} from 'react';
+import api from './api';
 export default class UserAdd extends Component{
     handleSubmit=(event) => {
         event.preventDefault();
         let username=this.username.value;
         let email=this.email.value;
         let user={username,email};
-        // 从缓存中读取用户列表字符串
-        let usersStr=localStorage.getItem('users');
-        // 将字符串转成对象数组
-        let users=usersStr? JSON.parse(usersStr):[];
-        // 给每个对象增加一个ID号
-        user.id = users.length>0? users[users.length-1].id+1:1;
-        // 向此数组中加入新的对象
-        users.push(user);
-        // localStorage只能放字符串，需要把数组从新数列化，再把数组保存到缓存中
-        localStorage.setItem('users',JSON.stringify(users));
+ 		api.createUser(user);
         console.log(this.props); // 每个组件都有一个对象，里面是location、match、history那些东西
         // 是在HashRouter.js里的传给route.js
         // 再通过history对象的push方法跳转到用户列表页面
@@ -590,35 +626,203 @@ export default class UserAdd extends Component{
 
 #### src/components/UserList.js
 
+注意：是先渲染的User 再渲染的UserList
+
 ```react
 import React,{Component} from 'react';
+import api from './api';
 import {Link} from '../react-router-dom';
 export default class UserList extends Component{
     state={
         users:[]
     }
-    componentDidMount() {
-        let usersStr=localStorage.getItem('users');
-        let users=usersStr? JSON.parse(usersStr):[];
-        this.setState({users});
-    }
+	componentWillMount() {
+        // 拿到所有用户
+		let users=api.getUsers();
+		this.setState({users});
+	}
+	handleDelete=(id) => {
+		let users = api.delUser(id);
+		this.setState({users});
+	}
     render() {
         return (
-            <div className="row">
-                <div className="col-md-12">
-                    <ul className="list-group">
-                        {
-                            this.state.users.map(user => (
-                                <li className="list-group-item" key={user.id}>
-                                    <Link to={`/user/detail/${user.id}`}>{user.username}</Link>
-                                </li>
-                            ))
-                        }
-                    </ul>
-                </div>
-            </div>
+			<table className="table table-bordered">
+				<thead>
+					<tr>
+					  <th>ID</th>
+						<th>用户名</th>
+						<th>操作</th>
+					</tr>
+				</thead>
+				<tbody>
+					{
+						this.state.users.map(user => (
+							<tr key={user.id}>
+								<td>
+									<Link to={{pathname:`/user/detail/${user.id}`,state:user}}>
+									    {user.id}
+								     </Link>
+								</td>
+								<td>{user.username}</td>
+								<td>
+									<button
+										onClick={()=>this.handleDelete(user.id)}
+										className="btn btn-danger">删除</button>
+								</td>
+							</tr>
+						))
+					}
+				</tbody>
+			</table>
         )
     }
+}
+```
+
+#### src/components/UserDetail.js
+
+```react
+import React,{Component} from 'react'
+import api from './api';
+export default class UserDtail extends Component{
+	state={
+		user: {}
+	}
+	componentDidMount() {
+         // 需要先拿到ID号
+		let user=this.props.location.state.user;
+		if (!user) {
+             // 通过ID，需要拿到match中的params（match是属性中来的，需要在Route增加）
+			let id=this.props.match.params.id;
+		     user = api.getUser(id);
+		}
+		this.setState({user});
+	}
+	render() {
+		let user=this.state.user;
+		return (
+			<div>
+				<p>ID:{user.id}</p>
+				<p>用户名:{user.username}</p>
+				<p>邮箱:{user.email}</p>
+			</div>
+		)
+	}
+}
+```
+
+#### src/index.js
+
+自己写一个Forward和Back组件，react没有，自己写的功能
+
+```react
+import {HashRouter as Router,Route,Link,Back} from './react-router-dom';
+
+					  <ul className="nav navbar-nav">
+                            <li><Link to="/">Home</Link></li>
+                            <li><Link to="/user">User</Link></li>
+                            <li><Link to="/profile">Profile</Link></li>
++    					  <li><Back /></li>
+                        </ul>
+```
+
+#### src/components/Back.js
+
+自己写的，react没有的
+
+```react
+import React,{Component} from 'react';
+import {Comsumer, Consumer} from './context';
+export default class Back extends Component{
+    render(){
+        return(
+            <Consumer>
+                {
+                    value=>{
+                        return <a onClick={value.history.goback()}>返回</a>
+                    }
+                }
+            </Consumer>
+        )
+    }
+}
+```
+
+#### src/react-router-dom/HashRouter.js
+
+增加goback方法
+
+```react
+        let value={
+            location:this.state.location,
+            history:{
+                // 参数to是要跳转的路径
+                push(to){
+                    window.location.hash=to;
+                },
++                goback(){
++                    window.history.go(-1);
++                }
+            }
+        }
+```
+
+#### src/react-router-dom/Route.js
+
+```react
+import React,{Component} from 'react';
+import {Consumer} from './context';
+import pathToRegexp from 'path-to-regexp';
+export default class Route extends Component{
+	render() {
+		return (
+			<Consumer>
+				{
+					value => {
+						let {location: {pathname}}=value;// /user
+						let {path="/",component: Component,exact=false,render,children}=this.props;
+						let keys=[];//[id]
+						let regexp=pathToRegexp(path,keys,{end: exact});
+						let result=pathname.match(regexp);
+						let props={
+							location: value.location,
+							history:value.history
+						}
+						if (result) {//[匹配的字符串,第一个分组]
+							let [,...values]=result;// result.slice(1);
+							keys=keys.map(key => key.name);//[id]
+							let params = keys.reduce((memo,name,index) => {
+								memo[name]=values[index];
+								return memo;
+							},{});
+							let match={
+								url:pathname,
+								path,
+								params
+							}
+							props.match=match;
+							if (Component) {
+								return <Component {...props}/>;
+							} else if (render) {
+								return render(props);
+							} else if (children) {
+								return children(props);
+							} else {
+								return null;
+							}
+						} else {
+							if (children) {
+								return children(props);
+							} else {
+								return null;
+							}
+						}
+					}
+				}
+			</Consumer>
+		)
+	}
 }
 ```
 
