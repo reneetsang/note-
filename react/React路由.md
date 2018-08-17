@@ -35,6 +35,7 @@
 
   - 在应用中 `<Redirect>` 可以设置重定向到其他 route 而不改变旧的 URL。 
   - 重定向，如果都匹配不上就返回这个组件
+- Protected
 
 ### 对象和方法
 
@@ -216,6 +217,8 @@ export default class HashRouter extends Component{
 
 #### src/react-router-dom/Route.js 
 
+route有个特点，看自己的路径和url中的路径是否一样，一样就渲染组件
+
 ```react
 import React,{Component} from 'react';
 import {Consumer} from './context';
@@ -227,6 +230,7 @@ export default class Route extends Component{
                 {
                     // 参数value就是Provider中的value
                     value => {
+                        // 电脑输入的地址
                         let {location:{pathname}}=value; // /user
                         // 跟Route中的属性比较，先解构一下
                         // component:Component起个别名，重命名一下，因为类组件需要大写
@@ -536,6 +540,7 @@ let userApi =  {
 		return userApi.getUsers().find(user=>user.id == id);
 	},
 	delUser(id) {
+         // 若跟传进来的id相等，就删掉
 		let users =  userApi.getUsers().filter(user => user.id!=id); 
 		localStorage.setItem('users',JSON.stringify(users));
 		return users;
@@ -781,8 +786,8 @@ export default class Route extends Component{
 				{
 					value => {
 						let {location: {pathname}}=value;// /user
-						let {path="/",component: Component,exact=false,render,children}=this.props;
-						let keys=[];//[id]
+						let {path="/",component: Component,exact=false}=this.props;
+						let keys=[];// 是个数组，里面有[id]
 						let regexp=pathToRegexp(path,keys,{end: exact});
 						let result=pathname.match(regexp);
 						let props={
@@ -790,7 +795,8 @@ export default class Route extends Component{
 							history:value.history
 						}
 						if (result) {//[匹配的字符串,第一个分组]
-							let [,...values]=result;// result.slice(1);
+							// 第一个匹配的字符串不要
+							let [,...values]=result;// 相当于result.slice(1);
 							keys=keys.map(key => key.name);//[id]
 							let params = keys.reduce((memo,name,index) => {
 								memo[name]=values[index];
@@ -802,21 +808,9 @@ export default class Route extends Component{
 								params
 							}
 							props.match=match;
-							if (Component) {
-								return <Component {...props}/>;
-							} else if (render) {
-								return render(props);
-							} else if (children) {
-								return children(props);
-							} else {
-								return null;
-							}
+                               return <Component {...props} />
 						} else {
-							if (children) {
-								return children(props);
-							} else {
-								return null;
-							}
+							return null;
 						}
 					}
 				}
@@ -824,5 +818,113 @@ export default class Route extends Component{
 		)
 	}
 }
+```
+
+### 受保护的路由
+
+#### src/index.js
+
+```react
+			<Switch>
+			  <Route exact path="/" component={Home} />
+			  <Route path="/user" component={User} />
++			  <Route path="/login" component={Login} />
+			  {/* 先渲染Protected，再渲染路由，能匹配就渲染render函数返回值 */}
++			  <Protected path="/profile" component={Profile} />
+			  <Redirect to="/"/>	
+			</Switch>
+```
+
+#### src/components/Protected.js
+
+使用
+
+```react
+import React,{Component} from 'react'
+import {Route,Redirect} from '../react-router-dom';
+
+// 把props解构出来，组件名一般大写
+// 其它剩下的属性 rest = {path,xxxxxx}
+export default function ({component: Component,...rest}) {
+	return (
+		// 外面套个route,返回个路由 把rest中的属性传给Route
+		// 如果路径匹配了，会返回render函数的返回值
+		// 用render而不用component是因为可以加一些逻辑判断
+		// Route中的props里还是那三个属性location match history
+		<Route {...rest} render={props => (
+			// 简单模拟判断有没有登陆
+			// Redirect中的to还可以放个对象，state存登陆前的路径（这里就是当前路径），放在当前location自定义属性里了
+			localStorage.getItem('logined')? <Component {...props} />:<Redirect to={{pathname: '/login',state: {from:props.location.pathname}}}/>
+		)}/>
+	)
+}
+```
+
+#### src/components/Login.js
+
+```react
+import React,{Component} from 'react'
+export default class Login extends Component{
+	handleClick=() => {
+		localStorage.setItem('logined',true);
+		// 跳回登陆前页面
+		this.props.history.push(this.props.location.state.from);
+	}
+	render() {
+		return (
+			<div>
+				<button className="btn btn-primary" onClick={this.handleClick}>登录</button>
+			</div>
+		)
+	}
+}
+```
+
+#### src/react-router-dom/Route.js
+
+要实现支持render
+
+```react
++                             if (Component) {
++                                return <Component {...props}/> 
++                            } else if (render) {
++                                return render(props);
++                            } else {
++                                return null;
++                            }
+```
+
+#### src/react-router-dom/HashRouter.js
+
+实现 to可以支持对象
+
+```react
+render() {
+        let self=this;
+        let value={
+            location: self.state.location,
+            history: {
++                push(to) {
++                    if (typeof to == 'object') {
++                        let {pathname,state}=to;
++                        self.setState({
++                            location: {
++                                ...self.state.location,state,pathname
++                            }
++                        },() => {
++                            window.location.hash=pathname;
++                        });
++                    } else {
++                        window.location.hash=to;
++                    }                    
++                }
++            }
+        }
+        return (
+            <Provider value={value}>
+                {this.props.children}
+            </Provider>
+        )
+    }
 ```
 

@@ -21,6 +21,8 @@ Redux 是一个 JavaScript 应用状态管理的库，当项目很复杂的时�
 
 ### 1.渲染状态
 
+这时候appState数据是全局变量，所有人都可以更改，很不安全
+
 ```jsx
 //数据源
 let appState={
@@ -54,6 +56,10 @@ render(appState);
 - 模块之间需要共享数据和数据可能被任意修改导致不可预料的结果之间有矛盾
 - 所以提供一个修改状态的`dispatch`方法，不要去直接更改状态，对数据的操作修改必须通过这个方法
 
+规定 如果想要修改appState只能通过调用dispatch方法
+
+action是一个动作，用来描述你想怎么修改
+
 ```jsx
 let appState={
     title: {color: 'red',text: '标题'},
@@ -74,9 +80,11 @@ function render(appState) {
     renderContent(appState.content);
 }
 //先定义好要做那些事情（常量） 也叫宏
-const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR';
-const UPDATE_CONTENT_CONTENT = 'UPDATE_CONTENT_CONTENT';
+// action是一个动作 {type:UPDATE_TITLE_COLOR,color:'orange}
+const UPDATE_TITLE_COLOR = 'UPDATE_TITLE_COLOR'; // 更新标题颜色
+const UPDATE_CONTENT_CONTENT = 'UPDATE_CONTENT_CONTENT'; // 更新内容文本
 
+// 保安
 // 派发的方法，用来更改状态
 // 派发时应该将修改的动作action提交过来，是个对象，对象里的type属性是固定必须的。
 function dispatch(action) {
@@ -100,7 +108,9 @@ render(appState);
 
 ### 3.分装仓库
 
-把状态放进一个容器里，保护起来，将定义状态和规则的部分抽离到容器外面
+上面虽然定义了一个dispatch来修改，但是写个appState=null还是可以修改，因为它还是全局变量。
+
+需要把状态放进一个容器里，保护起来，外面拿不到（限制它的作用域，放在函数里），将定义状态和规则的部分抽离到容器外面
 
 ```jsx
 function renderTitle(title) {
@@ -117,21 +127,24 @@ function render(appState) {
     renderTitle(appState.title);
     renderContent(appState.content);
 }
-// 创建容器/仓库
+// 创建容器/仓库，这个应该是个可以复用的方法（每个保安的工作业务逻辑应该是不一样的），所以dispatch和state都不应该写死在里面，要传进去
 function createStore(reducer) {
-    let state;
-    // 让外面可以获取状态
+    let state; 
+    // 保护起来，这时候是私有变量，又可以让外面可以获取状态
     function getState() {
         return state;
     }
-
+	
+    // 拿到动作，根据老状态，算出新状态。
+    // 为什么要知道老状态呢，比如要写计数器，每次加一，那要知道原来旧状态是多少才可以
     function dispatch(action) { 
-        state=reducer(state,action); // 把新状态覆盖
+        state=reducer(state,action); // 返回新的state状态，把新状态覆盖
     }
-    // 在创建仓库的时候派发一次动作，为了走下reducer获取初始值，写个空对象是undefined走默认值
+    // 刚开始state是undefined，调用reducer可以获取，所以需要派发一次动作
+    // 在创建仓库的时候派发一次动作，为了走下reducer获取初始值，写个空对象是undefined走默认值（返回初始状态 ）
     dispatch({});
     
-    // 将方法暴露给外面使用,将状态放到了容器中外部无法在进行更改了
+    // 将方法暴露给外面使用(store.getState()),将状态放到了容器中外部无法在进行更改了
     return { getState , dispatch }
 }
 
@@ -161,8 +174,9 @@ let reducer=function (state=initState,action) {
     }
 }
 
+// 把reducer传进去，因为每个管理员处理的事情不一样
 let store=createStore(reducer);
-render(store.getState());
+render(store.getState()); //store.getState() 状态对象
 setTimeout(function () {
     store.dispatch({type:UPDATE_TITLE_COLOR,color:'purple'});
     store.dispatch({type:UPDATE_CONTENT_CONTENT,text:'新标题'});
@@ -171,6 +185,10 @@ setTimeout(function () {
 ```
 
 ### 4.监控数据变化 发布订阅
+
+上面每派发一次动作，就要重新渲染一次，很麻烦
+
+把渲染逻辑放在dispatch里面，订阅这个状态变化，通知我刷新
 
 ```jsx
 function renderTitle(title) {
@@ -196,13 +214,13 @@ function createStore(reducer) {
 	// 发布订阅模式，先将render方法订阅好，每次dispatch时都调用订阅好的方法
     function dispatch(action) { // 发布
         state=reducer(state,action);
-        listeners.forEach(l=>l()); // 当状态变化时执行
+        listeners.forEach(l=>l()); // 当派发后，状态变化时让所有的订阅函数执行
     }
 
     function subscribe(listener) { // 订阅的方法
         listeners.push(listener);
         return () => {
-            // 再次调用时 移除监听函数
+            // 再次调用时 移除监听函数，取消订阅
             listeners = listeners.filter(item => item!=listener);
             console.log(listeners);
         }
@@ -227,6 +245,7 @@ let reducer=function (state=initState,action) {
 }
 let store=createStore(reducer);
 render();
+// 向仓库进行订阅，订阅一个函数，监控状态，更改执行render方法
 let unsubscribe = store.subscribe(render);
 setTimeout(function () {
     store.dispatch({type:'UPDATE_TITLE_COLOR',color:'purple'});
@@ -369,7 +388,7 @@ function combineReducers(reducers) {
 
 ### context
 
-react提供一个context API，可以解决跨组件的数据传递。16.3版本以前的context和现在最新版context用法有区别。在16.3官方不推荐使用，如果某个组件shouldComponentUpdate返回了false后面的组件就不会更新了
+react提供一个context API，可以解决跨组件的数据传递。16.3版本以前的context和现在最新版context用法有区别。在16.3官方不推荐使用，如果某个组件shouldComponentUpdate返回了false后面的组件就不会更新了。都是有关系的组件才可以，类似祖父传给子孙。
 
 contextAPI 新的方法非常简便。
 
@@ -476,9 +495,19 @@ export default class Counter extends Component{
 一般项目里，会有一个store的文件夹，专门管理的redux的
 
 - actions 里放actorCreator的
+
+  - 因为每个组件都有它自己不同的动作
+
+  - Actor Creator 用来创建action动作，不需要手动拼action了 ，组件里引用这个就行，不用再引用action-types了 
+
 - reducers 里放reducer的
+
+  - redux只有一个状态树，一个reducer，组件都是不同的状态，只能把这些动作都发给统一的仓库，统一的reducer来处理 
+
   - 一般情况下，如果用combineReducers，一般会在reducers文件夹下在新建一个单独的文件(index.js)，把合并的reducer导出来再用
+
 - action-types.js 放常量的（想要实现的功能）
+
 - index.js 创建容器stores
 
 ```javascript

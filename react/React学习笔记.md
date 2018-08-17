@@ -371,6 +371,8 @@ ReactDOM.render(<Clock/>,window.root);
 ##### 受控组件
 
 > React.js 认为所有的状态都应该由 React.js 的 state 控制，只要类似于 `<input />`、`<textarea />`、`<select />` 这样的输入控件被设置了 `value`值，那么它们的值永远以被设置的值为准。值不变，`value` 就不会变化。 
+>
+> 在 React.js 当中必须要用 `setState` 才能更新组件的内容，所以我们需要做的就是：监听输入框的`onChange` 事件，然后获取到用户输入的内容，再通过 `setState` 的方式更新 `state`中的 `username`，这样 `input` 的内容才会更新。 
 
 ```javascript
 {/* 写了value 要写onChange事件更改状态或者用defaltValue，不然不会更改 */}
