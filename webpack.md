@@ -290,11 +290,11 @@ npm install style-loader css-loader less less-loader node-sass sass-loader -D
 
 上面打包加载后的css文件是以行内样式style的标签写进打包后的html页面中，如果样式很多的话，我们更希望直接用link的方式引入进去，这时候需要把css拆分出来。
 
-​        // 抽离样式文件，抽离出以link标签的形式引入
+        // 抽离样式文件，抽离出以link标签的形式引入
 
-​        // extract-text-webpack-plugin@next
+        // extract-text-webpack-plugin@next
 
-​        // mini-css-extract-plugin 有bug
+        // mini-css-extract-plugin 有bug
 
 安装，因为当前版本只支持webpack3，所以要加个@next
 
