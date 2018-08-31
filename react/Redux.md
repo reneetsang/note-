@@ -15,8 +15,6 @@ Redux 是一个 JavaScript 应用状态管理的库，当项目很复杂的时�
 
 ## 实现简单的Redux
 
-![redux2](../images/redux2.png)
-
 来写一个简单的"redux"吧！
 
 实现把内容渲染到页面上
@@ -356,9 +354,36 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
 
 - subscribe(listener)
 
+### bindActionCreator
+
+```rea
+import actions from '../store/actions/counter';
+import {bindActionCreator} from '../../redux';
+let newActions=bindActionCreator(actions,store.dispatch);
+
+<button onClick={()=>newActions.add()}>+</button>
+<button onClick={()=>newActions.minus()}>-</button>
+```
+
+原理
+
+```react
+export default function (actions,dispatch) {
+    let newActions={};
+    for (let key in actions) {
+        newActions[key]=() => dispatch(actions[key].apply(null,arguments));
+    }
+    return newActions;
+}
+```
+
+
+
 ###combineReducers
 
-合并reducer，把他们合并成一个
+因为redux应用只能有一个仓库，只能有一个reducer
+
+把多个reducer合并成一个
 
 key是新状态的命名空间，值是reducer，执行后会返回一个新的reducer。
 
@@ -385,6 +410,26 @@ function combineReducers(reducers) {
         }
         return newState;
     }
+}
+
+//因为redux应用只能有一个仓库，只能有一个reducer
+//把多个reducer函数合并成一个
+export default function (reducers) {
+	//返回的这个函数就是合并后的reducer
+	// state合并后老的状态 acion新的状态
+	return function (state={},action) {
+		let newState={};
+		for (let key in reducers) {
+			// 第一次循环
+			// key=counter1
+			// reducers[counter1]=counter那个reducer 
+			// state合并后的状态树 
+			// if (key===action.name) {
+				newState[key]=reducers[key](state[key],action);
+			//}
+		}
+		return newState;
+	}
 }
 ```
 
@@ -504,9 +549,11 @@ export default class Counter extends Component{
 
 - reducers 里放reducer的
 
+  - 希望每个组件都只维护自己的状态
+
   - redux只有一个状态树，一个reducer，组件都是不同的状态，只能把这些动作都发给统一的仓库，统一的reducer来处理 
 
-  - 一般情况下，如果用combineReducers，一般会在reducers文件夹下在新建一个单独的文件(index.js)，把合并的reducer导出来再用
+  - 一般情况下，如果用combineReducers库合并成一个reducer，一般会在reducers文件夹下在新建一个单独的文件(index.js)，把合并的reducer导出来再用
 
 - action-types.js 放常量的（想要实现的功能）
 
@@ -533,9 +580,13 @@ Redux流程中，每个组建中要把状态映射到组建上，还要自己订
 
 React-Redux 提供`connect`方法，是个高阶函数，用于从 UI 组件生成容器组件。connect方法调用后返回的是新组件。
 
+connect实现的是仓库和组件的连接 。
+
 其中`connect`方法接受两个参数：`mapStateToProps`和`mapDispatchToProps`
 
 - mapStateToProps
+
+  是一个函数 把状态映射为一个属性对象 
 
   映射state状态到props属性上。mapStateToProps会订阅 Store，每当state更新的时候，就会自动执行，重新计算 UI 组件的参数，从而触发 UI 组件的重新渲染。
 
@@ -546,6 +597,8 @@ React-Redux 提供`connect`方法，是个高阶函数，用于从 UI 组件生�
   ```
 
 - mapDispatchToProps
+
+  也是一个函数 把dispatch方法映射为一个属性对象 
 
   将dispatch方法的返回值作为属性对象
 
@@ -591,9 +644,66 @@ export default connect(mapStateToProps,mapDispatchToProps)(Counter);
 export default connect(mapStateToProps,action)(Counter);
 ```
 
+##### 原理
+
+```react
+import {Consumer} from './context';
+import React,{Component} from 'react';
+import {bindActionCreators} from '../redux';
+/**
+ * connect实现的是仓库和组件的连接
+ * 把仓库中的数据拿到，加工以后传给了组件
+ * mapStateToProps 是一个函数 把状态映射为一个属性对象
+ * mapDispatchToProps 也是一个函数 把dispatch方法映射为一个属性对象
+ */
+export default function (mapStateToProps,mapDispatchToProps) {
+	// 返回一个函数，接收参数是一个组件，返回的还是个组件
+	return function (Com) {
+		//在Proxy这个组件里实现仓库和组件的连接
+		class Proxy extends Component{
+			// 这个state传给了Com
+			state=mapStateToProps(this.props.store.getState())
+			componentDidMount() {
+				this.unsubscribe = this.props.store.subscribe(() => {
+					this.setState(mapStateToProps(this.props.store.getState()));
+				});
+			}
+			componentWillUnmount = () => {
+				this.unsubscribe();
+			}
+			
+			render() {
+				// 先声明一个空的actions对象
+				// mapDispatchToProps可以是函数，也可以是actionCreator对象
+				let actions={};
+				// 如果说mapDispatchToProps是一个函数，执行后得到属性对象
+				if (typeof mapDispatchToProps === 'function') {
+					actions = mapDispatchToProps(this.props.store.dispatch);
+				//如果说mapDispatchToProps是一个对象的话，我们需要手工绑定自动派发
+				} else {
+					actions=bindActionCreators(mapDispatchToProps,this.props.store.dispatch);
+				}
+				return <Com {...this.state} {...actions}/>
+			}
+		}
+		
+		// 返回一个组件，要接收provider的仓库
+		return () => (
+			<Consumer>
+				{
+					// value =>{let store=value.store}
+					// 渲染Consumer其实是渲染value =>{let store=value.store}的返回值，就是Proxy
+					value => <Proxy store={value.store}/>
+				}
+			</Consumer>
+		);
+	}
+}
+```
+
 #### Provider 组件
 
-是一个组件，用来接受store，再经过他的手通过context api传递给所有的子组件
+是一个组件，用来接受store，再经过他的手通过context api传递给所有的子组件，套在子组件外面（有点像路由的用法）
 
 connect方法返回的是新组件容器，需要让容器组件拿到`state`对象，才能生成 UI 组件的参数。
 
@@ -612,3 +722,30 @@ render(<Provider store={store}>
 ```
 
 `Provider`在根组件外面包了一层，这样一来，`App`的所有子组件就默认都可以拿到`state`了。
+
+##### 原理
+
+```react
+/**
+ * 是一个组件，用来接受store,再经过它的手通过context api传递给所有的子组件
+ */
+import React,{Component} from 'react'
+import {Provider as StoreProvider} from './context';
+
+import PropTypes from 'prop-types';
+export default class Provider extends Component{
+	//规定如果有人想使用这个组件，必须提供一个redux仓库属性
+	static propTypes={
+		store:PropTypes.object.isRequired
+	}
+	render() {
+		let value={store:this.props.store};
+		return (
+			<StoreProvider value={value}>
+				{this.props.children}
+			</StoreProvider>
+		)
+	}
+}
+```
+

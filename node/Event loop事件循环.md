@@ -24,7 +24,7 @@
 4. 检查Microtask微任务中有没有任务，如果有任务执行直到清空。
 5. 重复3和4。
 
-> 整个的这种运行机制又称为Event Loop(事件循环)
+> 即为同步完成，一个宏任务，所有微任务，一个宏任务，所有微任务......整个的这种运行机制又称为Event Loop(事件循环)
 
 #### 例子
 
@@ -54,8 +54,8 @@ setTimeout(function(){
 
 - 在node.js里，process 对象代表node.js应用程序，可以获取应用程序的用户，运行环境等各种信息。process.nextTick()方法将 callback 添加到`next tick 队列`，并且nextTick优先级比promise等microtask高。
 
->1. timers：执行setTimeout() 和 setInterval()中到期的callback。
->2. I/O callbacks：上一轮循环中有少数的I/Ocallback会被延迟到这一轮的这一阶段执行
+>1. 定时器（timers）：执行setTimeout() 和 setInterval()中到期的callback。定时器的用途是让指定的回调函数在某个阈值后会被执行，具体的执行时间并不一定是那个精确的阈值。定时器的回调会在制定的时间过后尽快得到执行，然而，操作系统的计划或者其他回调的执行可能会延迟该回调的执行。
+>2. I/O callbacks：上一轮循环中有少数的I/Ocallback会被延迟到这一轮的这一阶段执行。这个阶段执行一些诸如TCP错误之类的系统操作的回调。例如，如果一个TCP socket 在尝试连接时收到了 ECONNREFUSED错误，某些 *nix 系统会等着报告这个错误。这个就会被排到本阶段的队列中。
 >3. idle, prepare：队列的移动，仅内部使用
 >4. poll：最为重要的阶段，执行I/O callback，在适当的条件下会阻塞在这个阶段
 >5. check：执行setImmediate的callback
@@ -112,6 +112,8 @@ fn.then();
 ```
 
 ### 总结
+
+- 浏览器的Event loop是在`HTML5中定义的规范`，而node中则由`libuv库`实现。
 
 - 同一个上下文下，MicroTask微任务会比MacroTask宏任务先运行。
 - 浏览器是先取出一个MacroTask宏任务执行，再执行MicroTask微任务中的所有任务。Node是按照六个阶段执行，每个阶段切换时，再执行MicroTask微任务队列
