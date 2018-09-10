@@ -187,6 +187,271 @@ ReactDOM.render(<h1 id='titleBox' className='title' style={styleObj}>曾洁莹</
 
 3. ReactDOM.render(JSX语法最后生成的对象，容器)，基于Render方法把生成的对象动态创建为DOM元素，插入到指定的容器中
 
+### 简单原理
+
+```react
+// 1.创建一个对象（默认有四个属性：TYPE/PROPS/REF/KEY），最后要把这个对象返回
+// 2.根据传递的值修改这个对象
+// TYPE=>传递的TYPE
+// PROPS 需要做一些处理：大部分传递PROPS中的属性都赋值给对象的PROPS，有一些比较特殊 
+//     ->如果是REF或者KEY，我们需要把传递的PROPS中的这两个属性值，给创建对象的两个属性，而传递的PROPS中把这两个值删除掉
+//     ->把传递的CHILDREN作为新创建对象的PROPS中的一个属性	
+// 
+function createElement(type,props,children){
+    props=pros||{}；
+    // 创建一个对象，设置一些默认属性值
+    let obj={
+        type:null,
+        props:{
+            children:''
+        },
+        ref:null,
+        key:null
+    };
+    // 用传递的TYPE和PROPS覆盖原有的默认值
+	// 简单写法 obj={...obj,type,props}; //=>{type:type,props:props}
+    obj={...obj,type,props:{...props,children}}
+	// 把ref和key提取出来，并且删除props中的属性
+	'key' in obj.props?(obj.key=obj.props.key,obj.props.key=undefined):null;
+    'ref' in obj.props?(obj.ref=obj.props.ref,obj.props.ref=undefined):null;
+    return obj
+}
+let objJSX=createElement('h1',{id:'titleBox',className:'title',style:{color:'red'}},'曾洁莹')
+
+// render:把创建的对象生成对应的DOM元素，最后插入到页面中
+function render(obj,container,callBack){
+    let {type,props}=obj||{},
+        newElement=document.createElement(type);
+    for(let attr in props){
+        if(!props.hasOwnProperty(attr)) break; // 不是私有的，说明找到原型上的，直接结束遍历
+        if(!props[attr]) continue; // 如果当前属性没有值，直接不处理即可
+        let value=props[attr];
+        // CLASS-NAME的处理
+        if(attr==='className'){
+            newElement.setAttribute('class',value);
+            continue
+        }
+        // STYLE处理
+        if(attr==='style'){
+            // 如果是空字符串不处理
+            if(value==='') continue;
+            for(let styKey in value){
+                if(value.hasOwnProperty(styKey)){
+                    newElement['style'][styEle]=value[styKey]
+                }
+            }
+            continue;
+        }
+        // CHILDREN处理
+        if(attr==='children'){
+            if(typeof value=='string'){
+                let text=document.createTextNode(value);// 创建文本节点
+                newElement.appendChild(text);
+            }
+            continue;
+        }
+        newElement.setAttribute(attr,value); // 基于SET-ATTRIBUTE可以让设置的属性表现在HTML的结构上
+    }
+    container.appendChild(newElement);
+    callBack&&callBack();
+}
+render（objJSX,root,()=>{
+    console.log('ok')
+})
+```
+
+进一步优化：含有多标签
+
+```react
+// 创建JSX对象
+//   参数：至少两个 type/pros,children这个部分可能没有，也可能有多个
+//   
+function(type,props,...childrens){// 剩下的参数都是childrens数组里
+    let ref,key;
+    if('ref' in props){}
+    if('key' in props){}
+    return{
+        type,
+        props:{
+            ...props,
+            children:childrens.length<=1?(childrens[0]||''):childrens
+        },
+        ref,
+        key
+    }
+}
+
+
+function createElement(type,props,children){ 
+    props=pros||{}；
+    // 创建一个对象，设置一些默认属性值
+    let obj={
+        type:null,
+        props:{
+            children:''
+        },
+        ref:null,
+        key:null
+    };
+    // 用传递的TYPE和PROPS覆盖原有的默认值
+	// 简单写法 obj={...obj,type,props}; //=>{type:type,props:props}
+    obj={...obj,type,props:{...props,children}}
+	// 把ref和key提取出来，并且删除props中的属性
+	'key' in obj.props?(obj.key=obj.props.key,obj.props.key=undefined):null;
+    'ref' in obj.props?(obj.ref=obj.props.ref,obj.props.ref=undefined):null;
+    return obj
+}
+let objJSX=createElement('h1',{id:'titleBox',className:'title',style:{color:'red'}},'曾洁莹')
+
+// render:把创建的对象生成对应的DOM元素，最后插入到页面中
+function render(obj,container,callBack){
+    let {type,props}=obj||{},
+        newElement=document.createElement(type);
+    for(let attr in props){
+        if(!props.hasOwnProperty(attr)) break; // 不是私有的，说明找到原型上的，直接结束遍历
+        if(!props[attr]) continue; // 如果当前属性没有值，直接不处理即可
+        let value=props[attr];
+        // CLASS-NAME的处理
+        if(attr==='className'){
+            newElement.setAttribute('class',value);
+            continue
+        }
+        // STYLE处理
+        if(attr==='style'){
+            // 如果是空字符串不处理
+            if(value==='') continue;
+            for(let styKey in value){
+                if(value.hasOwnProperty(styKey)){
+                    newElement['style'][styEle]=value[styKey]
+                }
+            }
+            continue;
+        }
+        // CHILDREN处理
+        // 可能是一个值：可能是字符串也能是一个JSX对象
+        // 可能是一个数组：数组中的每一项可能是字符串也可能是JSX对象
+        
+        // 首先把一个值也变为数组，这样后期统一操作数组即可
+        if(attr==='children'){
+            if(!(value instanceof Array)){
+                value=[value]
+            }
+            value.forEach((item,index)=>{
+                // 验证item是什么类型的：如果是字符串就是创建文本节点。如果是对象，我们需要再次执行render方法，把创建的元素放到最开始创建的大盒子中
+                if(typeof value=='string'){
+                    let text=document.createTextNode(item);// 创建文本节点
+                    newElement.appendChild(text);
+                }else{
+                    render(item,newElement);
+                }
+            })
+            else{
+                // 如果只有一个值，我们创建一个文本节点即可
+                 if(typeof value=='string'){
+                    let text=document.createTextNode(value);// 创建文本节点
+                    newElement.appendChild(text);
+                }               
+            }
+
+            continue;
+        }
+        newElement.setAttribute(attr,value); // 基于SET-ATTRIBUTE可以让设置的属性表现在HTML的结构上
+    }
+    container.appendChild(newElement);
+    callBack&&callBack();
+}
+render（objJSX,root,()=>{
+    console.log('ok')
+})
+```
+
+## 组件
+
+### 1、react组件
+
+不管是vue还是react框架，设计之初都是期望我们按照“组件/模块管理”的方式来构建程序，也就是把一个程序划分为一个个的组件来单独处理
+
+**优势**
+
+1. 有助于多人协作开发
+2. 我们开发的组件可以被复用
+3. ...
+
+react中创建组件有两种方式：
+
+#### 函数声明式组件
+
+基于集成COMPONENT类来创建组件
+
+src->component:一般会在src里面建一个component文件夹，这个文件夹存放的就是开发的组件
+
+##### src->index.js
+
+```react
+import React from 'react'
+import ReactDOM from 'react-dom';
+import Dialog from './component/Dialog'
+
+ReactDOM.render(<div>
+     {/* 注释：JSX调取组件，只需要把组件当作一个标签使用即可（单双闭合都可以） */}
+	<Dialog con="哈哈"/>
+       {/* 属性值不是字符串，我们需要大括号包起来 */} 
+      <Dialog con"嘿嘿" lx={1}>
+      	<span>1</span>    
+        <span>2</span> 
+      <Dialog/>  
+</div>,root)
+```
+
+##### src->component->Dialog.js
+
+```react
+// 每一个组件中都要导入REACT，因为需要基于它的CREAT-ELEMENT把JSX解析渲染
+import React from 'reacr'；
+
+//函数声明组件
+// 1、函数返回结果，是一个新的JSX（也就是当前组件的JSX结构）
+// 2、props变量存储的值是一个对象，包含了调取组件时候传递的属性值（不传递是一个空对象）
+export default function Dialog(props){
+    let {con,lx=0,children,style}=props,
+        title=lx===0?'系统提示':'系统警告'
+    
+    // children:可能有可能没有，可能只是一个值，也可能是一个数组，可能每一项是一个字符串，也可能是一个对象等（都代表双闭合组件中的子元素）
+    return <session style={style}>
+    	<h2>{title}</h2>
+        <div>{con}</div>
+        { /* 把属性中传递的子元素放到组件中的指定位置 */}       
+        {children}
+        { /* 也可以基于REACT中提供的专门遍历CHILDREN的方法来遍历操作
+        */}  
+        {Reacr.Children.map(children,item=>itm)}
+    </session>
+}
+```
+
+#### 函数式组件的渲染机制
+
+知识点：CREATE-ELEMENT在处理的时候，遇到一个组件，返回的对象中，TYPE就不再是字符串标签名了，而是一个函数（类），但是属性还是存在PROPS中
+
+```
+{
+    type:Dialog,
+    props:{
+        lx:1,
+        con:'xxx',
+        children:一个值或者一个数组
+    }
+}
+```
+
+render渲染的时候，我们需要做处理，首先判断TYPE类型，如果是字符串，就创建一个元素标签，如果函数或者类，就把函数执行，把PROPS中的每一项（包含CHILDREN）传递给函数
+
+在执行函数的时候，把函数中的RETURN的JSX转换为新的对象（通过CREATE-ELEMENT），把这个函数返回。紧接着RENDER按照以往的渲染方式，创建DOM元素，插入到制定的容器中即可
+
+
+
+
+
 ## JSX
 
 jsx语法是facebook自己发明的，是javascript和xml语法的集合体，即可以像平常一样使用HTML，也可以在里面嵌套JavaScript语法。将组件的结构、数据甚至样式都聚合在一起定义组件，运行时，Babel等工具会将JSX编译成JavaScript语法。
