@@ -424,7 +424,7 @@ export default function Dialog(props){
         {children}
         { /* 也可以基于REACT中提供的专门遍历CHILDREN的方法来遍历操作
         */}  
-        {Reacr.Children.map(children,item=>itm)}
+        {React.Children.map(children,item=>itm)}
     </session>
 }
 ```
@@ -447,6 +447,121 @@ export default function Dialog(props){
 render渲染的时候，我们需要做处理，首先判断TYPE类型，如果是字符串，就创建一个元素标签，如果函数或者类，就把函数执行，把PROPS中的每一项（包含CHILDREN）传递给函数
 
 在执行函数的时候，把函数中的RETURN的JSX转换为新的对象（通过CREATE-ELEMENT），把这个函数返回。紧接着RENDER按照以往的渲染方式，创建DOM元素，插入到制定的容器中即可
+
+#### 简单封装Dialog
+
+##### src->index.js
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import './static/css/reset.min.css'
+import 'bootstrap/dist/css/bootstrap.css'; //我们一般都把程序中的公用放到Index中导入，这样在其他组件中也可以使用了（webpack会把所有的组件都编译到一起，Index是主入口）
+// 导入bootstrap，需要导入的是不经过压缩处理的文件，否则无法编译（真实项目中bootstrap已经是过去式，我们后期项目中使用项目都是antd来做）
+//这里面有字体图片，路径是用..识别不了会报错，可以放在src-static中
+import Dialog from "./component"
+
+ReactDOM.render(<main>
+        <Dialog content='renee wow'}></Dialog>
+        <Dialog type={2} content='renee wow2'}/>
+        <Dialog type='请登录' content={
+			<div>
+                    <input type='text' class='from-control' placeholder='请输入用户名' />
+                    <input type='password' class='from-control' placeholder='请输入密码' />
+             </div>
+         }>
+            <button typeof="button" className='btn btn-success'>登录</button>
+            <button typeof="button" className='btn btn-danger'>取消</button>
+            
+        </Dialog>
+
+    </main>,root)
+```
+
+##### src->component->Dialog.js
+
+```react
+import React from 'react'
+
+export default function Dialog(props){
+    let {type,content,children}=props;
+    
+    // 类型的处理
+    let typeValue=type||'系统提示'
+    if(typeof type==="number"){
+        switch(type){
+            case 0:
+                typeValue='系统提示';
+                break;
+            case 1:
+                typeValue='系统警告';
+                break;
+            case 2:
+                typeValue='系统错误';
+                break;
+        }
+    }
+    
+    return <section className="panel panel-default" style={{width:50%,margin:'10px auto'}}>
+        <div className='panel-heading'>
+        	<h3 className='panel-title'>{typeValue}</h3>
+        </div>
+        <div className='panel-body'>
+        	{content}
+        </div>
+        {/* 如果传递了children，就把内容放到尾部 */}
+        {
+            children?<div className='panel-footer'>
+            	{React.Children.map(children,item=>item)}    
+            </div>:null
+        }
+    </section>
+}
+```
+
+####基于继承component类来创建组件
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+class Dialog extens React.Component{
+    constructor(){
+        // ES6中的extends继承，一旦使用了constructor，第一行位置必须设置super执行，相当于React.Component.call(this)，也就是call继承，把父类私有的属性继承过来
+        super();
+        
+        // this.props 属性集合
+        // this.ref ref集合（非受控组件中用到）
+        // this.context 上下文
+        // this.updater 
+    }
+    render(){
+        return <section>
+        	<h3>系统提示</h3>
+        </section>
+    }
+}
+
+ReactDOM.render(<div>
+        曾洁莹
+    	<Dialog lx={2} />
+    </div>,root)
+
+let obj={
+    type:'div',
+    props:{
+        children:[
+            '曾洁莹',
+            {
+                type:Dialog,
+                props:{
+                    lx:2
+                }
+            }
+        ]
+    }
+}
+```
 
 
 
