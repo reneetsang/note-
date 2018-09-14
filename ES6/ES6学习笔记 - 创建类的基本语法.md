@@ -31,7 +31,7 @@ var p1=new Person('renee',18)
 
 > ES6中创建类
 >
-> class的内部是通过Object.definePropterty来定义的，把公共方法定义在原型链上。把静态方法定义再类上
+> class的内部是通过`Object.definePropterty`来定义的，把公共方法定义在原型链上。把静态方法定义再类上
 
 ```javascript
 console.log(Person); //报错 不存在变量提示
@@ -55,6 +55,57 @@ class Person{
 let p1=new Person('renee');
 //Person(); //报错 ES6中使用class创建的类，天生自带new.target的验证，不允许把创建的类当作普通函数执行
 ```
+
+
+
+
+
+```javascript
+class Parent{
+    constructor(x,y){
+        // 给实例设置私有的属性
+        this.x=x;
+        this.y=y;
+    }
+    
+    // Parent.prototype
+    render(){
+        // 使用this.render()执行
+    }
+    
+    // 函数也是对象，把Parent当做一个普通的对象，设置的私有属性方法，和实例没有关系
+    static ajax(){}
+}
+Parent.prototype.AA=12; // ES6创建类的大括号中只能写方法（而且不能是箭头函数），不能设置属性，属性需要自己额外拿出来设置
+Parent.BB=12; // 把它作为对象设置的私有属性也只能拿到外面设置
+new Parent(10,20) // new Parent执行的时候，首先执行constructor
+
+class Children extends Parent{
+    constructor(){
+        super(10,20)；// Parent.constructor.call(this,10,20)
+        //this.x=10
+        //this.y=20
+        //this.ajax(); 报错，子类只能继承父类原型上的属性和方法，和父类实例私有的属性和方法。对于父类作为普通对象设置的私有属性和方法是无法继承的
+    }
+    render(){
+        
+    }
+}
+console.dir(new Children());
+{
+    x:10,
+    y:20,
+    __proto__:Children.prototype
+      render
+      __proto__:Parent.prototype
+        render
+        AA:12
+        __proto__:Object.
+    
+}
+```
+
+
 
 ## 类的继承
 
