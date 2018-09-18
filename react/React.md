@@ -744,7 +744,7 @@ setInterval(()=>{
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class Clock extends React.Component{
+class Clock extends React.Component{    
     constructor(){
         super();
         // 可以理解为，初始化组件的状态（都是对象类型的），要求我们在constructor中需要把后期使用的状态信息全部初始化一下（约定俗成的语法规范）
@@ -786,37 +786,306 @@ class Clock extends React.Component{
 ReactDOM.render(<Clock></Clock>,root)
 ```
 
-投票案例
+####　投票案例
+
+##### this问题，JSX中的事件绑定
+
+```react
+render(){
+    return <button className='btn btn-success' onClick={this.support}>支持</button>
+    support(ev){
+        //console.log(this) //undefined 不是我们理解的当前操作的元素
+        //ev.target:可以通过事件源获取当前的操作元素，但框架主要是数据驱动DOM改变，要尽量少操作DOM，很少使用
+    }
+}
+```
+
+如果能让方法中的this变成当前类的实例就好了，这样可以操作属性和状态等信息
+
+1. bind 不可以用call和aplly，因为call和apply会立马执行，但这个方法麻烦
+
+   ```react
+   render(){
+       // render中的this是实例
+       return <button className='btn btn-success' onClick={this.support.bind(this)}>支持</button>
+       support(ev){
+   	
+       }
+   }
+   ```
+
+2. 箭头函数 真实项目中最常用的方式，给JSX元素绑定的事件方法一般都是箭头函数，目的为了保证函数中的this还是实例
+
+   ```react
+   render(){
+       // render中的this是实例
+       return <button className='btn btn-success' onClick={this.support}>支持</button>
+       support=ev=>{
+   		// this:继承上下文
+       }
+   }
+   ```
+
+##### 1、数据驱动思想
 
 ```react
 import React from 'react';
+import PropTypes from 'prop-types'
 
 export default class Vote extends React.Component{
-    constructor(){
-        super()
+    // 组件传递的属性是只读的，我们为其设置默认值和相关规则
+    static defaultProps={ }
+    static propTypes={
+        title:PropTypes.string.isRequired
+    }
+    constructor(props){
+        super(props);
+        this.state={
+            n:0,//支持人数
+            m:0 //反对人数
+        }
     }
     render(){
+        let {n,m}=this.state,
+            rate=(n+m)===0?0%||((n/(n+m)*100).toFixed(2)+'%');
         return <section className='panel panel-default' style={{width:'60%',margin:'0 auto'}}>
-            <div className='panel-deading'>
+            <div className='panel-heading'>
                 <h3 className='panel-title'>
-                    标题:{this.props.title}
+                    {this.props.title}
                 </h3>
             </div>
             <div className='panel-body'>
-                支持人数
+                支持人数:{n}
                 <br /><br />
-                反对人数
+                反对人数:{m}
                 <br /><br />
-                支持率
+                支持率:{rate}
             </div>
             <div className='panel-footer'>
-                <button className='btn btn-success'>支持</button>
+                {/**/}
+                <button className='btn btn-success' onClick={this.support}>支持</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;
-                <button className='btn btn-danger'>反对</button>
+                <button className='btn btn-danger' onClick={this.against}>反对</button>
             </div>
         </section>
     }
+        
+    support=ev=>this.setState({n:this.state.n+1});
+	against=ev=>this.setState({m:this.state.m+1});
 }
 
+```
+
+##### 2、DOM操作思想
+
+refs:是react中专门提供操作DOM来实现需求的方式，它是一个对象，存储了当前组件中所有设置ref属性的元素（元素ref属性值是啥，refs中存储的元素的属性名就是啥）
+
+```react
+import React from 'react';
+import PropTypes from 'prop-types'
+
+export default class Vote extends React.Component{
+    // 组件传递的属性是只读的，我们为其设置默认值和相关规则
+    static defaultProps={ }
+    static propTypes={
+        title:PropTypes.string.isRequired
+    }
+    constructor(props){
+        super(props);
+    }
+    render(){
+        let {n,m}=this.state,
+            rate=(n+m)===0?0%||((n/(n+m)*100).toFixed(2)+'%');
+        return <section className='panel panel-default' style={{width:'60%',margin:'0 auto'}}>
+            <div className='panel-heading'>
+                <h3 className='panel-title'>
+                    {this.props.title}
+                </h3>
+            </div>
+            <div className='panel-body'>
+                {/* 
+                  *	ref='spanLeft'
+                  * 是在当前实例上挂载一个属性refs(对象)，存储所有ref元素
+                  *
+                  * ref={x=>this.spanLeft=x}
+                  * x代表当前元素，它的意思是，把当前元素直接挂载到实例上，后期需要用到元素，直接this.spanLeft获取即可
+                  */}
+                支持人数:<span ref={x=>this.spanLeft=x}>0</span>
+                <br /><br />
+                反对人数:<span ref={x=>this.spanLeft=x}>0</span>
+                <br /><br />
+                支持率:<span ref={x=>this.spanLeft=x}>0%</span>
+            </div>
+            <div className='panel-footer'>
+                {/**/}
+                <button className='btn btn-success' onClick={this.support}>支持</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;
+                <button className='btn btn-danger' onClick={this.against}>反对</button>
+            </div>
+        </section>
+    }
+        
+    support=ev=>{
+        console.log(this.refs)
+        let {spanLeft}=this;
+        spanLeft.innerHTML++;
+        this.computed();
+    };
+    against=ev=>{
+        let {spanRight}=this;
+        spanRight.innerHTML++;
+        this.computed();        
+    };
+    computed=()=>{
+        let {spanLeft,spanRight,spanRate}=this,
+            n=pareseFloat(spanLeft.innerHTML),
+            m=pareseFloat(spanRight.innerHTML),
+            rate=(n+m)===0？'0%':((n/(n+m)*100).toFixed(2)+'%');
+    }    
+}
+```
+
+在React组件中
+
+1. 基于数据驱动(修改状态数据，react帮助我们重新渲染试图)完成的组件叫做**“受控组件（受数据控制的组件）”**
+2. 基于ref操作DOM实现试图更新的，叫做“**非受控组件”**
+
+=>真实项目中，建议大家多使用“受控组件”
+
+
+
+#### 利用表单元素的ONCHANGE实现MVVM实现双向绑定
+
+vue:[MVVM] 数据更改视图跟着更改，视图更改数据也跟着更改（双向数据绑定）
+
+react:[MVC] 数据更改视图跟着更改（原本是单向数据绑定，但是可以自己构建出双向的效果）
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import 'bootstrap/dist/css'
+import PropTypes from 'prop-types'
+
+class Temp extends React.Component{
+    constructor(){
+        super();
+        this.state={
+            text:'曾洁莹'
+        }
+    }
+    
+    componentDidMount(){
+        setTimout(()=>{
+            this.setState({text:'Renee'})
+        },1000)
+    }
+    
+    render(){
+       let {text}=this.state 
+        return <section className='panel panel-default'>
+            <div className='panel-heading'>
+                <input type='text' className='form-control' value={text} onChange={ev=>{
+                        //在文本框的on-change中修改状态信息：实现的是视图改变数据
+                        this.setState({
+                            text:ev.target.value
+                        })
+                    }}/>
+            </div>
+            <div className='panel-body'>
+                {text}
+            </div>
+    	</section>
+    }
+}
+
+ReactDOM.render(<Temp/>,root)
+```
+
+### 3、生命周期函数（钩子函数）
+
+描述一个组件或者程序从创建到销毁的过程，我们可以在过程中间基于钩子函数完成一些自己的操作（例如：在第一次渲染完成做什么，或者在第二次即将重新渲染之前做什么等...）
+
+**[基本流程]**
+
+- constructor:创建一个组件
+- componentWillMount:第一次渲染之前
+- render:第一次渲染之前
+- componentDidMount:第一次渲染之后
+
+**[修改流程：当组件的状态数据发生改变（set-state）或者传递给组件的属性发生改变（重新调用组件传递不同的属性）都会引发render重新执行渲染（渲染也是差异渲染）]**
+
+- shouldComponentUpdate:是否允许组件重新渲染（允许则执行后面函数，不允许直接结束）
+- componentWillUpdate:重新渲染之前
+- render:第二次及以后重新渲染
+- componentDidUpdate:重新性能渲染之后
+
+
+
+- componentWillReceiverProps:父组件把传递给子组件的属性发生改变后触发的钩子函数
+
+**[卸载：原有渲染的内容是不消失的，只不过以后不能基于数据改变视图了]**
+
+- componentWillUnmount：卸载组件之前（一般不用）
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import 'bootstrap/dist/css'
+import PropTypes from 'prop-types'
+
+class A extends React.Component{
+    // 这个是第一个执行的，执行完成后（给属性设置默认值）才向下执行
+    // static defaultProps={};
+    
+    constructor(){
+        super();
+        console.log('1:constructor');
+        this.state={n:1};
+    }
+    componentWillMount(){
+        // 在will-Mount中，如果直接的set-state修改数据，会把状态信息改变后，然后render和did-mount；但如果set-state是放在一个异步操作中完成的（例如定时器或者从服务器获取数据），也是先执行render和did，然后执行这个异步操作修改状态，紧接着走修改的流程（这样和放到did-mount没啥区别），所以一般把数据请求放到Did中处理
+        // 真实项目中的数据绑定，一般第一次组件渲染，我们都是绑定的默认数据，第二次才是绑定的从服务器获取（有些需求我们需要根据数据是否存在判断显示隐藏等）
+        console.log('2:willMount 第一次渲染之前',this.refs.HH)//->undefined
+    }
+    componentDidMount(){
+        console.log('4:DidMount 第一次渲染之后',this.refs.HH)//->div
+        // 真实项目中在这个阶段一般做如下处理：
+        // 1.控制状态信息更改的操作
+        // 2.从服务器获取数据，然后修改状态信息，完成数据绑定
+        // ...
+        setInterval(()=>{
+            this.setState({n:this.state.n+1})；// 状态在改，一直render渲染
+        }，5000)
+    }
+    shouldComponentUpdate(nextProps,nextState){
+        console.log('5:是否允许更新')
+        // return false; //函数返回true就是允许，返回false就是不允许
+        console.log(this.state.n);
+        // 发现在这个钩子函数中，我们获取的state不是最新修改的，而是上一次的state值
+        // 例如：第一次加载完成，5000ms后，我们基于set-state（异步的，改状态前先执行shouldComponentUpdate）把n修改为2，但是此处获取的还是1呢
+        // 但是这个方法有两个参数
+        // nextProps:最新修改的属性信息
+        // nextState:最新修改的状态信息
+        if(this.nextState.n>3){
+            return false;
+        }
+        return true;
+    }
+    componentWillUpdate(nextProps,nextState){
+        // 这里获取的状态也是更新之前的，和should一样也有两个参数存储最新的信息
+        console.log('6:组件更新之前',this.state.n)
+    }
+    componentWillUpdate(){
+        // 这里获取的状态也是更新之后的
+        console.log('8:组件更新之后',this.state.n)
+    }
+    render(){
+        console.log('render')
+        return<div ref='HH'>
+            {this.state.n}
+        </div>
+    }
+}
+ReacrDOM.render(<A/>,root)
 ```
 
