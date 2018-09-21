@@ -1054,15 +1054,16 @@ class A extends React.Component{
         // 2.从服务器获取数据，然后修改状态信息，完成数据绑定
         // ...
         setInterval(()=>{
-            this.setState({n:this.state.n+1})；// 状态在改，一直render渲染
-        }，5000)
+            this.setState({n:this.state.n+1});// 状态在改，一直render渲染
+        },5000)
     }
     shouldComponentUpdate(nextProps,nextState){
         console.log('5:是否允许更新')
-        // return false; //函数返回true就是允许，返回false就是不允许
+        // return false; 函数返回true就是允许，返回false就是不允许
         console.log(this.state.n);
         // 发现在这个钩子函数中，我们获取的state不是最新修改的，而是上一次的state值
         // 例如：第一次加载完成，5000ms后，我们基于set-state（异步的，改状态前先执行shouldComponentUpdate）把n修改为2，但是此处获取的还是1呢
+        
         // 但是这个方法有两个参数
         // nextProps:最新修改的属性信息
         // nextState:最新修改的状态信息
@@ -1087,5 +1088,255 @@ class A extends React.Component{
     }
 }
 ReacrDOM.render(<A/>,root)
+```
+
+### 4、复合组件和单项数据流传递
+
+父组件把信息传递给子组件：
+
+基于属性传递即可（而且传递是单方向的：只能父亲通过属性把信息给儿子，儿子不能直接把信息作为属性传递给父亲）
+
+后期子组件中的信息需要修改：可以让父组件传递给子组件的信息发生变化（也就是子组件接受的属性发生变化，组件会重新渲染=>componentWillReceiveProps钩子函数）
+
+只要实现，点击子组件BODY中按钮的时候，可以修改父组件panel的状态信息n，panel的状态改变，panel会重新的执行render渲染，而重新执行render的时候，会把最新的状态值作为属性，传递给子组件head，head接受的属性值发生改变，head组件也会重新的渲染
+
+类似于这种“子改父”的操作，我们需要使用一下技巧完成：
+
+1. 把父组件中的一个方法，作为属性传递给子组件
+2. 在子组件中，把基于属性传递进来的方法，在合适的时候执行（相当于在执行父组件的方法：而这个方法中完全可以操作父组件中的信息）
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import 'bootstrap/dist/css'
+import PropTypes from 'prop-types'
+
+class Head extends React.Component{
+    constructor(){
+        super();
+    }
+    render(){
+        return<div className='panel-heading'>
+            {/* 子组件通过属性获取父组件传递的内容 */}
+        	<h3 className'panel-title'>点击次数:{this.props.count}</h3>
+        </div>
+    }
+}
+
+class Body extends React.Component{
+    constructor(){
+        super();
+    }
+    render(){
+        return<div className='panel-body'>
+        	<button className='btn btn-success' onClick={this.props.callBack}>点我啊</button>
+        </div>
+    }
+}
+
+class Panel extends React.Component{
+    constructor(){
+        super();
+        thia.state={n:0}
+    }
+    fn=()=>{
+        //修改panel的状态信息
+        this.setState({
+            n:this.state.n+1
+        })
+    }
+    
+    render(){
+        return<section className='panel panel-default' style={{width:'50%',margin:'0 auto'}}>
+            {/* 父组件中在调取子组件的时候，把信息通过属性传递给子组件 */}
+        	<Head count={this.state.n}/>
+            {/* 父组件把自己的一个方法基于属性传递给子组件，目的是在子组件中执行这个方法 */}
+            <Body callBack={this.fn} />
+        </section>
+    }
+}
+
+ReactDOM.render(<Panel />,root)
+```
+
+### 5、轮播图组件
+
+#### src->index.js 
+
+公共的样式在index中导入，组件独有的样式可以在组件内部导入
+
+数据参数一般都通过属性传递过去的
+
+在react的JSX中需要使用图片等资源的时候，资源的地址不能使用./相对地址（因为经过webpack编译后，资源地址的路径已经改变了，原有的相对地址无法找到对应的资源），此时我们需要基于ES6 Module或者CommonJS等模块导入规范，把资源当做模块导入进来（或者使用的图片地址都是网络地址）
+
+```react
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Banner from './component/Banner'
+// 公共的样式在index中导入，组件独有的样式可以在组件内部导入
+import './static/css/reset.min.css';
+let IMG_DATA=[{
+    id:1,
+    title:'',
+    pic:require('./static/imgages/1.png')
+},{
+    id:2,
+    title:'',
+    pic:require('./static/imgages/2.png')
+},{
+    id:3,
+    title:'',
+    pic:require('./static/imgages/3.png')
+},{
+    id:4,
+    title:'',
+    pic:require('./static/imgages/4.png')
+},{
+    id:5,
+    title:'',
+    pic:require('./static/imgages/5.png')
+}]
+//或者这么写
+let IMG_DATA=[]
+for(let i =1;i<5;i++){
+    IMG_DATA.push({
+        id:1,
+        title:'',
+        pic:require(`./static/imgages/${i}.png`)
+    })
+}
+
+// 调取组件渲染
+ReactDOM.render(<main>
+     {/*
+       * data：轮播图需要绑定的数据
+       * interval：自动轮播间隔的时间 默认3000ms
+       * step：默认展示图片的索引（记住前后各克隆了一张）默认1
+       * speed：每一张切换所需要的运动时间 默认300ms
+       */}
+    <Banner data={IMG_DATA} interval={} step={} speed />
+    <div></div>    
+    <Banner data={IMG_DATA.slice(0)} interval={5000} step={} speed /> 
+</main>,root)
+```
+
+#### src->component->Banner.js
+
+```react
+import React from 'react';
+import PropTypes from 'prop-types'
+import '../static/css/banner.css'
+
+export default class Banner extends React.Component{
+    // 设置默认值规则
+    static defaultProps={
+        data:[],
+        interval:3000,
+        step:1,
+        speed:300
+    }
+    static propTypes={
+        data:PropTypes.array,
+        interval:PropTypes.number,
+        step:PropTypes.number,
+        speed:PropTypes.number	 	
+    }
+    constructor(props){
+        super(props)；
+        
+        let {step,speed}=this.props
+        this.state={
+            step,
+            speed
+        }
+    }
+	// 实现数据克隆（不要放在render里，因为只需执行一次），
+    componentWillMount(){
+        let {data}=this.props,
+            cloneData=data.slice(0);
+        cloneData.push(data[0]);
+        cloneData.unshift(data[data.length-1]);
+        this.cloneData=cloneData; // 以后不会更改，没必要挂载到state上，挂载到实例上供其他方法调用
+    }
+
+	// 自动轮播
+    componentDidMount(){
+        // 把定时器返回值挂载到实例上，方便后期清除（结束自动轮播）
+		this.autoTimer=setInterval(this.autoMove,this.props.interval)
+    }
+
+    componentWillUpdate(nextProps,nextState){
+		//边界判断:如果最新修改的step索引大于最大索引（说明此时已经是末尾了，不能再向后走了），我们让其立刻回到（无动画）索引为1的位置
+        if(nextState.step>(this.cloneData.length-1)){
+            this.setState({
+                step:1,
+                speed:0
+            })
+        }
+    }
+
+    componentDidUpdate(){
+		//只有是从克隆的第一张立即切换到真实第一张后，我们才做如下处理：让其从当前第一张运动到第二张即可
+        let {step,speed}=this.state;
+        if(step===1&&speed===0){
+            // 加定时器延迟原因：css3的transition有一个问题（主栈执行的时候，短时间内遇到两次设置transition-duration的代码，以最后一次设置的为主）
+            let delayTimer=setTimeout(()=>{
+                this.setState({
+                    step:step+1,
+                    speed:this.props.speed
+                })                
+            },0)
+
+        }
+    }	
+
+    render(){
+        // 轮播图数据需要克隆后的，焦点不需要
+        let {data}=this.props,
+            {cloneData}=this;
+        if(data.length==0) return '';
+        
+        //控制wrapper的样式
+        let {step,speed}=this.state
+        let wrapperSty={
+            left:-step*1000+'px',
+            transition:`left ${speed}ms`
+        }
+        
+        return <section className='container'>
+            <ul className='wrapper' style={wrapperSty}>
+                {cloneData.map((item,index)=>{
+                    let {title,pic}=item
+                    return <li key={idex}>
+                        <img src={pic} alt={title} />
+                    </li>
+                })}
+                <il><img src="" alt="" /></il>
+            </ul>
+            <ul className='focus'>
+                {data.map((item,index)=>{
+                    return <li key={index}></li>
+                })}
+            </ul>
+            <a href='javascript:;' className='arrow arrowLeft'></a>
+            <a href='javascript:;' className='arrow arrowRight'></a>
+        </section>
+    }
+    // 实现向右切换
+    autoMove=()=>{
+        this.setState({
+            step:this.state.step+1
+        })
+    }
+}
+```
+
+#### src->static->css->banner.css
+
+```css
+.container{
+    
+}
+.container:hover .arrow{dispaly:none;}
 ```
 
