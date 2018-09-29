@@ -1,6 +1,6 @@
 ## redux中间件
 
-我们改写了，dispatch方法实现了在更改状态时打印前后的状态,但是这种方案并不好。所以我们可以采用中间的方式。中间件就是一个函数，对store.dispatch方法进行了改造，在发出 Action 和执行 Reducer 这两步之间，添加了其他功能
+我们改写了，dispatch方法实现了在更改状态时打印前后的状态,但是这种方案并不好。所以我们可以采用中间的方式。中间件就是一个函数，对store.dispatch方法进行了改造，在发出 Action 和执行 Reducer 这两步之间，添加了其他功能。
 
 ```react
 let store = createStore(reducer);
@@ -17,6 +17,30 @@ export default store;
 
 redux 提供了官方加载中间件的函数 applyMiddleware
 
+```react
+function applyMiddleware(middleware) {
+	return function (createStore) {
+		// reducers就是合并后的reducers
+		return function (reducers) {
+			let store=createStore(reducers);//这就是原始老的仓库 dispatch 就是原始的dispatch
+			let dispatch;//dispatch方法指向新的dispatch方法，在下面重新赋值了
+			// 把老仓库传给logger，执行以后middleware2相当于logger第二层，为了获取第三层还要再调用一次
+			let middleware2=middleware({
+				getState:
+				 store.getState,
+				dispatch:action=>dispatch(action) // 这样写才会调用新的dispatch方法
+			});//调用第一把第一层去掉 得到logger第二层
+			// 把原生老的dispatch方法传进去（logger第二层next）
+			dispatch=middleware2(store.dispatch);//再调用第二次把第二层去掉 得到logger第三层
+			return {
+				...store, //老的store 把里面旧的dispatch覆盖
+				dispatch
+			}
+		}
+	}
+}
+```
+
 ### redux-logger
 
 ```react
@@ -29,7 +53,7 @@ function logger1(store) {
 		// 这个方法就是dispatch，用它覆盖掉applyMiddleware中的store原始的dispatch方法
 		return function (action) {
 			console.log(`老值`,store.getState().counter1.number);
-			next(action); // 原始老的dispatch方法 相当于调用reducer把状态给改了，再取状态得到新的状
+			next(action); // 原始老的dispatch方法 相当于调用reducer把状态给改了，再取状态得到新的状态
 			console.log(`新值`,store.getState().counter1.number);
 		}
 	}
