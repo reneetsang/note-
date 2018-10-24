@@ -4,6 +4,9 @@ Redux 是一个 JavaScript 应用状态管理的库，当项目很复杂的时�
 
 ![redux-wrong](../images/redux-wrong.png)
 
+1. 主要两个或者多个组件之间想要实现信息的共享，都可以基于redux解决，把共享的信息存储到redux容器中进行管理
+2. 还可以使用redux做临时存储：页面加载的时候，把从服务器获取的数据信息存储到redux中，组件渲染需要的数据，从redux中获取，这样只要页面不刷新，路由切换的时候，再次渲染组件不需要重新从服务器拉取数据，直接从redux中获取即可。页面刷新，从头开始！（并不一定需要用，只是代替了localStorage本地存储，来实现数据缓存）
+
 ##　Redux设计思想
 
 - Redux是将整个应用状态存储到到一个地方，称为store
@@ -294,10 +297,13 @@ Action 是一个对象。其中的`type`属性是必须的，表示 Action 的�
 
 action creator 顾名思义就是用来创建 action 的，action creator 只简单的返回 action。
 
+每个版块单独的action-creator:就是dispatch派发时候需要传递的action对象进一步统一进行处理（react-redux中会体验到它的好处）
+
 ```javascript
-const ADD_TODO = 'ADD_TODO';
+const ADD_TODO = 'ADD_TODO'; //import * as TYPE from '../action-types';
 let actions = {
     addTodo(todo){
+        // dispatch派发的时候需要传递啥就返回啥即可
         return { type: ADD_TODO, todo}
     }
 }
@@ -306,6 +312,8 @@ let actions = {
 ###　store.dispath(action)
 
 store.dispatch()是 View 发出 Action 的唯一方法。store.dispatch接受一个 Action 对象作为参数，将它发送出去
+
+通过派发任务，告知reducer执行，需要把state和action传递进去。reducer执行，把容器中的状态改变   
 
 ```javascript
 let store=createStore(reducer);
@@ -352,6 +360,8 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
 
 - dispatch(action)
 
+  store.dispatch()是 View 发出 Action 的唯一方法。store.dispatch接受一个 Action 对象作为参数，将它发送出去
+
 - subscribe(listener)
 
 ### bindActionCreator
@@ -381,17 +391,20 @@ export default function (actions,dispatch) {
 
 ###combineReducers
 
-因为redux应用只能有一个仓库，只能有一个reducer
+因为redux只有一个状态树，即一个reducer，组件都是不同的状态，只能把这些动作都发给统一的仓库，统一的reducer来处理 
 
-把多个reducer合并成一个
+可以使用combineReducers把多个reducer合并成一个reducer导出 
 
 key是新状态的命名空间，值是reducer，执行后会返回一个新的reducer。
 
 ```javascript
+// 合并reducers时，为了保证每一个板块管理的状态信息不冲突，在redux中，按照指定的名称单独划分板块的状态
+//{c:{},todo:{}}
 let reducer = combineReducers({
     c: counter,
-    t: todo
+    todo
 });
+export default reducer;
 ```
 
 原理：
@@ -545,7 +558,7 @@ export default class Counter extends Component{
 
   - 因为每个组件都有它自己不同的动作
 
-  - Actor Creator 用来创建action动作，不需要手动拼action了 ，组件里引用这个就行，不用再引用action-types了 
+  - Actor Creator 用来创建action动作，不需要手动拼action了 ，组件里引用这个就行，不用再引用action-types了。就是封装几个方法（都是需要dispatch派发任务修改状态时候执行的方法），方法返回的是当前派发任务时候传递的action对象。 
 
 - reducers 里放reducer的
 
@@ -562,13 +575,15 @@ export default class Counter extends Component{
 ```javascript
 ├── components
 │   └── Counter.js
-├── index.js
+├── index.js // 主入口
 └── store
-    ├── action-types.js
-    ├── actions
+    ├── action-types.js // 所有派发任务的行为标识都在这里进行宏观管理
+    ├── actions // 存放每一个模块需要进行的派发任务(ActionCreator)
+        ├── index.js // 合并所有的action-creator,类似reducer合并，为了防止冲突，合并后的对象是以板块名称单独划分管理
     │   └── counter.js
-    ├── index.js
-    └── reducers // 专门处理自己的动作
+    ├── index.js // 创建store(redux容器)
+    └── reducers // 存放每一个模块的reducer,专门处理自己的动作
+        ├── index.js // 使用combineReducers合并所有reducer
         └── counter.js
 ```
 
@@ -576,7 +591,24 @@ export default class Counter extends Component{
 
 Redux流程中，每个组建中要把状态映射到组建上，还要自己订阅和更新，很麻烦。所以React-Redux诞生了，可以实现把redux映射到组件里，还可以自动更新。
 
-#### connect()
+react-redux是把redux进一步封装，是被redux项目，让redux操作更简单
+
+- store文件夹中的内容和redux一样
+- 只是在组件调取使用的时候，可以优化一些步骤
+
+1. Provider根组件
+
+   当前整个项目都在Provider组件下，作用就是把创建的store可以供内部任何后代组件使用（基于上下文完成的）
+
+   Provider组件中只允许出现一个子元素
+
+   把创建的store基于属性传递给Provider(这样后代组件都可以使用这个store)
+
+2. connect高阶组件
+
+
+
+#### connect() 高阶组件
 
 React-Redux 提供`connect`方法，是个高阶函数，用于从 UI 组件生成容器组件。connect方法调用后返回的是新组件。
 
@@ -701,13 +733,11 @@ export default function (mapStateToProps,mapDispatchToProps) {
 }
 ```
 
-#### Provider 组件
+#### Provider 根组件
 
-是一个组件，用来接受store，再经过他的手通过context api传递给所有的子组件，套在子组件外面（有点像路由的用法）
+React-Redux 提供`Provider`组件，用来接受store，再经过他的手通过context api传递给所有的子组件，套在子组件外面（有点像路由的用法），可以让子孙组件拿到`state`。
 
 connect方法返回的是新组件容器，需要让容器组件拿到`state`对象，才能生成 UI 组件的参数。
-
-React-Redux 提供`Provider`组件，可以让容器组件拿到`state`。
 
 ```jsx
 import React from 'react';
@@ -747,5 +777,63 @@ export default class Provider extends Component{
 		)
 	}
 }
+```
+
+#### 例子
+
+```react
+// react-redux
+// VoteBase.js
+import {connect} from 'react-redux'
+import action from '../../store/action'
+// 相对于传统的组件，做的优化步骤有：
+// 1.导出的不再是我们创建的组件，而是基于connect构造后的高阶组件
+//	export default connect([mapStateToProps],[mapDispatchToProps])([自己创建的组件名字])
+// 2.react-redux帮我们做了一件非常重要的事情，以前我们需要自己基于subscribe向事件池追加方法，以达到容器状态信息改变的时候，执行我们追加的方法。但是现在不用了，react-redux帮我们做了这件事：“所有用到redux容器状态信息的组件，都会向事件池追加一个方法，当状态信息改变，通知方法执行，把最新的状态信息作为属性传递给组件，组件的属性值改变了，组件也会重新渲染”
+class VoteBase extends React.Component{
+	constructor(props){
+		super(props);
+	}
+
+	componentWillMount(){
+		this.props.init({
+			title:'我长得帅不帅',
+			n:0,
+			m:100
+		})
+	}
+
+	render(){
+		let {title,n,m}=this.props;
+		return <div className='panel panel-default'>
+			<div ckassName='panel-heading'>
+				<h3 className='panel-title'>{title}</h3>
+			</div>
+		</div>
+	}
+}
+// 把REDUX容器中的状态信息遍历，赋值给当前组件的属性（state）
+let mapStateToProps=state=>{
+	// state就是redux容器中的状态信息
+	// 我们返回的是啥，就把它挂载到当前组件的属性上（redux存储很多信息状态，我们想用啥就返回啥即可），console.log(this.props)可查看到
+	return{
+		...state.vote
+	}
+};
+// 把redux中的dispatch派发行为遍历，也赋值给组件的属性（ActionCreator）
+// let mapDispatchToProps=dispatch=>{
+// 	// dispatch:就是store中存储的dispatch方法
+// 	// 返回的是啥，就相当于把它挂载到当前组件的属性上（一般我们挂载一些方法，这些方法中完成了dispatch派发任务操作）
+// 	return{
+// 		init(initData){
+// 			dispatch(action.vote.init(initData));
+// 		}
+// 	}
+// };
+// export default connect(mapStateToProps,mapDispatchToProps)(VoteBase);
+
+// 可优化为:
+export default connect(state=>({...state.vote}),action)(VoteBase);
+// 因为react-redux帮我们做了一件事，把action-creator中编写的方法（返回action对象的方法），自动构建成dispatch派发任务的方法，也就是mapDispatchToProps这种格式
 ```
 
