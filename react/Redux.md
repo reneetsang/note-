@@ -366,7 +366,7 @@ store.dispatch({type:'ADD_TODO',text:'读书'});
 
 ### bindActionCreator
 
-```rea
+```react
 import actions from '../store/actions/counter';
 import {bindActionCreator} from '../../redux';
 let newActions=bindActionCreator(actions,store.dispatch);
@@ -596,6 +596,8 @@ react-redux是把redux进一步封装，是被redux项目，让redux操作更简
 - store文件夹中的内容和redux一样
 - 只是在组件调取使用的时候，可以优化一些步骤
 
+React-Redux主要有两个组件：
+
 1. Provider根组件
 
    当前整个项目都在Provider组件下，作用就是把创建的store可以供内部任何后代组件使用（基于上下文完成的）
@@ -605,8 +607,6 @@ react-redux是把redux进一步封装，是被redux项目，让redux操作更简
    把创建的store基于属性传递给Provider(这样后代组件都可以使用这个store)
 
 2. connect高阶组件
-
-
 
 #### connect() 高阶组件
 

@@ -1,5 +1,11 @@
 ## redux中间件
 
+安装 
+
+```
+yarn add redux-logger redux-thunk redux-promise
+```
+
 我们改写了，dispatch方法实现了在更改状态时打印前后的状态,但是这种方案并不好。所以我们可以采用中间的方式。中间件就是一个函数，对store.dispatch方法进行了改造，在发出 Action 和执行 Reducer 这两步之间，添加了其他功能。
 
 ```react
@@ -43,6 +49,8 @@ function applyMiddleware(middleware) {
 
 ### redux-logger
 
+redux-logger:能够在控制台清晰的展示出当前redux操作的流程和信息（原有状态、派发信息、修改后的状态信息）
+
 ```react
 //let logger=store=>next=>action=>{} 
 // 每一层都有作用
@@ -60,6 +68,29 @@ function logger1(store) {
 ```
 
 ### redux-thunk
+
+redux-thunk:用来处理异步的dispatch派发
+
+#### 用法
+
+```javascript
+//增加客户信息，payload={id,name}
+create(payload){
+    //=> thunk中间件的语法:在指定执行派发任务的时候，等待3000ms后再派发
+    // 原理：
+    return dispatch=>{
+        //=>dispatch都传递给我们了，我们想什么时候派发，自己搞定即可
+        setTimeout(()=>{
+            dispatch({
+                type:TYPES.CUSTOM_CREATE,
+                payload
+            })
+        },3000)
+    }
+}
+```
+
+#### 原理
 
 ```react
 // 把dispatch,getState从store解构出来
@@ -79,6 +110,29 @@ function thunk1({dispatch,getState}) {
 ```
 
 ### redux-promise
+
+redux-promise:在dispatch派发时支持promise操作
+
+#### 语法
+
+```javascript
+// promise中间件的语法
+create(payload){
+    return {
+        type:TYPES.CUSTOM_CREATE,
+        //=>传递给reducer的payload需要等待promise成功，把成功的结果传递过去
+        payload:new Promise(resolve=>{
+            setTimeout(()=>{
+                resolve(payload)
+            },3000)
+        })            
+    }
+}
+```
+
+#### 原理
+
+这里主要是通过判断对象是否拥有then属性，并且then属性是一个方法，那就默认是要给promise对象
 
 ```react
 function promise1({dispatch,getState}) {
