@@ -35,12 +35,12 @@ node安装完成后
 
 传统后台语言：Java/Python/PHP/C#(.NET)...
 
-node特点：
+### node特点：
 
 - 单线程的
 - 基于V8引擎渲染：说明快
-- 异步无阻塞的I/O操作：I/O(inout/output)对文件的读写
-- event-driven事件驱动：类似于发布订阅或者回调函数
+- 异步无阻塞的I/O操作：I/O(inout/output)对文件的读写，可以提供异步操作I/O
+- event-driven事件驱动：类似于发布订阅或者回调函数（方法操作完成之后，可以通过callback这种回调函数机制来做别的事情）
 
 6.在WB中开启node内置方法的代码提示
 
@@ -186,7 +186,7 @@ $ npm root/-g 查看本地项目或者全局环境下，npm的安装目录
 
 node本身是基于CommonJS模块规范设计的，所以模块是node组成
 
-- 内置模块：Node天生提供给JS调取使用的
+- 内置模块：Node天生提供给JS调取使用的，可以直接引用
 - 第三方模块：别人写好的，我们可以基于NPM安装使用（如less、jQuery）
 - 自定义模块：自己创建的一些模块
 
@@ -245,6 +245,167 @@ CommonJS模块化设计的思想（AMD/CMD/ES6 Module都是模块化思想）
 1. 所有代码都在模块作用域，不会污染全局作用域（每一个模块都是私有的，包括里面所有东西也都是私有的，不会和其他模块产生干扰）
 2. 模块可以多次加载，但是只会在第一次加载时运行一次，然后运行结果就被缓存了，以后再加载，就直接读取缓存结果。想要让模块再次运行，必须清楚缓存，为了保证性能，减少模块代码重复执行的次数。
 3. 模块加载的顺序，按照其在代码中出现的顺序。CommonJS规范加载模块是同步的，也就是说，只有加载完成，才能执行后面的操作
+
+#### require导入规则
+
+require('./xxx')或者../xxx再或者/xxx，这种自己指定路径的模式，都是为了导入自定义的模块，换句话说，想要导入自定义的模块，必须加路径
+
+require('xxx')->首先到当前项目的node_modules中查找是否存在这个模块，不存在找node提供的内置模块（导入第三方或者内置的）
+
+```
+__dirname:模块中这个内置变量是当前模块所在的绝对路径（具体到盘符：物理路径，例如C:\Users\renee\Desktop\笔记\node；相对路径：笔记\node，相对于根目录的路径）
+__filename:相对于__dirname来讲，多了模块名称，例如：C:\Users\renee\Desktop\笔记\node\node.md
+```
+
+## node中内置模块
+
+### path内置模块
+
+```javascript
+let path=require('path');
+console.log(path.resolve()); //返回当前模块的绝对地址（不包含模块名）
+
+path.resolve(__dirname,'less/test'); //可以把一个相对路径拼接在绝对路径后面（需要保证第一个参数是绝对路径，第二个相对的，如果都是绝对路径，以最后一个为主）
+```
+
+### fs内置模块：实现I/O操作
+
+```javascript
+let fs=require('fs')
+```
+
+#### fs.mkdir / fs.mkdirSync 创建文件夹
+
+> fs.mkdir(path[, mode], callback)
+
+有Sync的是同步创建，反之没有是异步，想要实现无阻塞的I/O操作，一般都使用异步操作完成要处理的事情
+
+```javascript
+let fs=require('fs')
+
+//fs.mkdirSync('./less');
+fs.mkdir('./less',err=>{
+    if(err){
+        // err说明失败
+        console.log('err');
+        return
+    }
+    console.log('ok')
+});
+console.log(1)
+```
+
+#### fs.readdir / fs.readdirSync 读取文件目录中的内容
+
+> fs.readdir(path[, options], callback)
+
+```javascript
+let fs=require('fs');
+
+//let result=fs.readdirSync('./'); //同步
+fs.readdir('./',(err,result)=>{
+    if(err){
+        console.log(err)
+    }
+    console.log(result); //返回的结果是一个数组
+})
+```
+
+#### fs.rmdir / fs.dirSync 删除文件夹
+
+删除文件夹必须保证文件夹是空的，如果里面有文件就要采用递归之类的方式。
+
+```javascript
+let fs=require('fs');
+
+fs.rmdir('./less',err=>{
+    if(err){
+        console.log(err)
+    }
+    console.log('ok');
+})
+```
+
+#### fs.readFile / fs.readFileSync 读取文件中的内容
+
+> fs.readFile(path[, options], callback)
+>
+> fs.readFileSync(path[, options])
+
+不设置utf-8编码格式，读取出来的是buffer格式（流格式）的数据，设置后读取到的是字符串格式的数据
+
+```javascript
+let fs=require('fs');
+
+//let result=fs.readFileSync('./less/less','utf8')
+
+fs.readFile('./less/less','utf8',(err,result)=>{
+    if(err){
+        console.log(err)
+    }
+    console.log(result); //返回的结果是一个数组
+})
+```
+
+#### fs.writeFile / fs.writeFileSync 向文件夹写入内容（覆盖式写入：写入的新内容会替换原有的内容）
+
+>fs.writeFile(file, data[, options], callback)
+>
+>fs.writeFileSync(file, data[, options])
+
+```javascript
+let fs=require('fs');
+
+fs.writeFile('./less/less','哈哈','utf8',err=>{
+    if(err){
+        console.log(err)
+    }
+    console.log('ok');
+})
+```
+
+#### fs.appendFile / fs.appendFileSync 追加写入新内容，原有的内容还在
+
+```javascript
+let fs=require('fs');
+
+fs.appendFile('./less/less','喝喝','utf8',err=>{
+    if(err){
+        console.log(err)
+    }
+    console.log('ok');
+})
+```
+
+#### fs.copyFile / fs.copyFileSync 拷贝文件到新的位置
+
+把./package.json拷贝放到less中
+
+```javascript
+let fs=require('fs');
+
+fs.copyFile('./package.json','./less/package.json',err=>{
+    if(err){
+        console.log(err)
+    }
+    console.log('ok');
+})
+```
+
+#### fs.unlink / fs.unlinkSync 删除文件
+
+> fs.unlink(path, callback)
+
+```javascript
+let fs=require('fs');
+
+fs.unlink('./less/less',err=>{
+    if(err){
+        console.log(err)
+    }
+    console.log('ok');
+})
+```
 
 
 
