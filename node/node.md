@@ -129,7 +129,7 @@ yarn安装：
 
 第三步：部署的时候“跑环境”
 
-不需要自己一个个的安装，只需要执行npm install或者yarn install即可，npm会自己先检测目录中是否有package.json文件，如果有的话，会按照文件中的配置依次安装
+不需要自己一个个的安装，只需要执行`npm install`或者`yarn install`即可，npm会自己先检测目录中是否有package.json文件，如果有的话，会按照文件中的配置依次安装
 
 ------
 

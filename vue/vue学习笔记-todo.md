@@ -1,6 +1,6 @@
 ## todo
 
-```javascript
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>

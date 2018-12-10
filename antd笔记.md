@@ -1,3 +1,5 @@
+## 安装入门
+
 1.$ yarn add antd
 
 2.快速使用
@@ -12,6 +14,17 @@
    ```
 
 3. antd提供的组件都是英文国际化的，需要中文显示，我们导入汉化模块
+
+   ```react
+   import zhCN from 'antd/lib/locale-provider/zh_CN';
+   
+   return (
+     <LocaleProvider locale={zhCN}>
+       <App />
+     </LocaleProvider>
+   );
+   ```
+
 
 
 
@@ -439,3 +452,27 @@ async componentWillReceiveProps(){
 ###  取消不必要的高阶处理
 
 真实项目中，并不是所有的组件都和redux有关系，所以对于那些和redux没有关系的组件，我们不要再connect高阶处理了（同理对于不需要使用路由中属性的一些组件，也没有必要withRouter...）；也就是尽可能少使用高阶组件，因为高阶组件都是利用柯理化函数思想，形成闭包嵌套，这样导致很多栈内存不销毁，影响性能！
+
+### redux-promise坑
+
+在redux-promise中间件使用的时候，action-creator中返回的对象，传递给reducer的数据（从服务器获取的数据，开始返回的是一个Promise）中的属性名必须是payload（必须小写），只有这样，当promise成功，中间件才会帮我们重新发送一次派发reducer，然后把获取的数据信息更新redux容器中的状态！=>promise值必须放到payload属性名下才可以
+
+也可以使用thunk中间件的语法，需要自己再dispatch
+
+```javascript
+quetyBanner(){
+    // 用redux-thunk就不用修改成payload
+    // return async dispatch=>{
+    //     let bannerData=await queryBanner();
+    //     dispatch({
+    //         type:TYPES.COURSE_QUERY_BANNER,
+    //         bannerData
+    //     })
+    // }
+    return {
+        type:TYPES.COURSE_QUERY_BANNER,
+        payload:queryBanner()
+    }
+}
+```
+
