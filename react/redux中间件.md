@@ -92,6 +92,8 @@ create(payload){
 
 #### 原理
 
+判断是否函数，函数就执行，不是就dispatch
+
 ```react
 // 把dispatch,getState从store解构出来
 function thunk1({dispatch,getState}) {
@@ -153,6 +155,79 @@ function promise1({dispatch,getState}) {
 			}
 		}
 	}
+}
+```
+
+### redux-saga
+
+redux-saga也是实现异步的方式，派发一个动作，发现匹配上了就执行函数
+
+store/index.js
+
+```react
+import {creatStore,applyMiddleware} from 'redux';
+import reducer from './reducer';
+import createSagaMiddleware from 'redux-saga';
+import {rootSaga} from '../saga'
+
+// 执行createSagaMiddleware可以得到中间件函数
+let sagaMiddleware=createSagaMiddleware();
+let store=applyMiddleware(sagaMiddleware)(createStore)(reducer);
+// 开始执行rootSaga
+sagaMiddleware.run(rootSaga,store)
+export default store();
+```
+
+store/saga.js
+
+takeEvery监听
+
+put派发动作
+
+all让所有监听函数执行，类似promise.all
+
+call表示告诉saga，清帮我执行以下delay函数，并传入1000作为参数
+
+take表示等待一个动作发生
+
+```react
+import {takeEvery,put,all} from 'redux-saga/effexts';
+import * as types from './store/action-types';
+const delay=ms=>new Promise(function(resolve,reject){
+    setTimeout(function(){
+        resolve();
+    },ms)
+})
+
+function* add(dispatch,action){
+  
+    yield delay(1000);//会等resolve成功后再往下走
+    //yield call(delay,1000)也可以这么写，call表示告诉saga，清帮我执行以下delay函数，并传入1000作为参数
+    
+    // put就是指挥saga中间件向仓库派发一个动作
+    yield put({type:types.ADD})
+}
+
+function* logger(action){
+    console.log(action)
+}
+
+//saga分为三类 1.rootSaga 2.监听saga 3.worker干活的saga
+function* watchLogger(){
+    yield takeEvery('*',logger)
+}
+
+function* watchAdd(){
+    //takeEvery监听派发给仓库的动作，如果派发的动作是types.ADD，就会执行add生成器
+    yield takeEvery(types.ADD_ASYNC,add)
+    console.log('rootSaga')
+}
+
+export function* rootSaga({getState,dispatch}){
+    // 是不能两个yield这样写的，要引入all
+	// yield watchAdd();
+    // yield watchLogger();
+    yield all([watchAll(),watchLogger()]) 
 }
 ```
 

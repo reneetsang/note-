@@ -1,7 +1,3 @@
-
-
-
-
 ## ES6-数组、对象方法
 
 ### 数组方法
@@ -45,9 +41,9 @@ array.reduce(function(total, currentValue, currentIndex, arr), initialValue)
 ```
 
 > - total 必需。初始值, 或者计算结束后的返回值。
-> - currentValue	必需。当前元素
-> - currentIndex	可选。当前元素的索引
-> - arr	可选。当前元素所属的数组对象。
+> 	 currentValue	必需。当前元素
+> 	 currentIndex	可选。当前元素的索引
+> 	 arr	可选。当前元素所属的数组对象。
 
 > 原理
 
@@ -124,8 +120,8 @@ console.log(newArr);
 ```
 
 >- currentValue	必须。当前元素的值
->- index	可选。当前元素的索引值
->- arr	可选。当前元素属于的数组对象
+>		index	可选。当前元素的索引值
+>		arr	可选。当前元素属于的数组对象
 
 > 原理
 
@@ -160,6 +156,18 @@ let boolean = [1,2,3,4,4,4,4,4,4,4].every(function(item,index){
 console.log(boolean);
 ```
 
+#### Array.concat()
+
+> concat() 方法用于连接两个或多个数组。
+>
+> 该方法不会改变现有的数组，而仅仅会返回被连接数组的一个副本。
+
+```javascript
+arrayObject.concat(arrayX,arrayX,......,arrayX)
+```
+
+
+
 ### 对象方法
 
 #### Object.keys()
@@ -183,6 +191,12 @@ Object.values(obj)
 ```
 
 ## ES5
+
+### 数组
+
+#### Array.isArray()
+
+> isArray() 方法用于判断一个对象是否为数组。
 
 ### 字符串
 
