@@ -1,10 +1,39 @@
 ## module
 
-模块分为三大类：核心模块、内置模块、第三方模块
+node模块分为三大类：文件模块('./promise.js')、内置模块(fs)、第三方模块(bluebird)
+
+为什么要有模块，把代码维护到一个对象，防止变量污染全局，防止代码重名
+
+闭包实现，闭包就是一个不销毁的作用域，别人拿不到。
+
+
+
+commonjs Node模块化规范 require webpack
+
+esModule es6 import
+
+commonjs可以规定：
+
+1. 一个文件就是一个模块
+2. 如何导入别人的模块 require
+3. 模块的导出 module.exports
+
+
 
 #### 文件模块、自定义模块
 
 这个就是我们自己写的
+
+let r=require('./a') 引入文件的时候，可以省略.js .json .node
+
+require是同步的，可以马上拿到结果
+
+```javascript
+let r=require('./a')
+console.log(r) //this,{} 
+```
+
+
 
 #### 核心模块、内置模块
 

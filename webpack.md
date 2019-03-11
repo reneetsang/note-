@@ -23,8 +23,8 @@ $ npx webpack --mode develop //开发模式，不会压缩文件
 
 ```javascript
  "scripts": {
-    "build": "webpack", //npm run build就会执行webpack 
-    "dev": "webpack-dev-server" // 通过下面配的静态服务器，可以在内存打包文件，开发时不会实时产生一堆文件
+    "build": "webpack --config webpack.config.js", //npm run build就会执行webpack 
+    "dev": "webpack-dev-server" // 开发的环境，通过下面配的静态服务器，可以在内存打包文件，开发时不会实时产生一堆文件
   },
 ```
 
@@ -61,7 +61,7 @@ $ npx webpack --mode develop //开发模式，不会压缩文件
       module:{}, // 对模块的处理 loader加载器
       plugins:[], // webpack对应的插件
       devServer:{},// 开发服务器的配置
-      mode:'development' // 模式的配置
+      mode:'development' // 模式的配置 默认两种 production development
   }
 
   // 实现html打包功能 可以通过一个模板实现打包出引用好路径的html
@@ -105,7 +105,7 @@ module.exports = {
 
 ```
 
-### 配置html模版
+### 配置html模版 html-webpack-plugin
 
 想要在src里建的index.html可以在dist中产出，引用的js文件也不需要自己手动修改。实现html打包功能，可以通过一个模板实现打包出引用好路径的html
 
@@ -119,7 +119,7 @@ $ npm i html-webpack-plugin -D
 
 - hash 引入产出资源的时候加上哈希避免缓存
 
-  - 还可以在文件名后加md5戳，在出口文件配置，其中[hash:8]8代表8位
+  - 还可以在文件名后加md5戳，在出口文件配置，其中[hash:8]8代表hash戳显示8位
 
   ```javascript
       output:{
@@ -135,13 +135,13 @@ $ npm i html-webpack-plugin -D
 ```javascript
 let HtmlWebpackPlugin = require('html-webpack-plugin');
 ···
-    plugins: [
+    plugins: [ // 数组，里面放着所有webpack插件
 +        new HtmlWebpackPlugin({
 +        minify: {
 +   		collapseWhitespace:true, // 去掉空行
 +            removeAttributeQuotes:true //去掉属性的双引号
 +        },
-+        hash: true,
++        hash: true, // 加上Hash戳
 +        template: './src/index.html',// 用哪个html作为模板
 +        filename:'index.html'
     })]
@@ -196,7 +196,7 @@ index.js是属于 index.html a.js是属于a.html，要配置多页面开发。�
     ], 
 ```
 
-### 配置开发服务器
+### 配置开发服务器 webpack-dev-server
 
 启动一个静态服务器， 默认会自动刷新，热更新（页面可能只有一个组件变化）。打包的文件存在于内存中，并不会产生在dist目录下。
 
@@ -207,8 +207,9 @@ npm i webpack-dev-server –D
 ```
 
 ```javascript
-    devServer:{
+    devServer:{ //开发服务器的配置
         contentBase:'./dist',
+        progress:true,// 现实进度条
         host:'localhost',
         port:3000,
         open:true,// 是否自动打开浏览器
@@ -237,7 +238,7 @@ let webpack = require('webpack');
 
 #### 什么是Loader 
 
-通过使用不同的Loader，Webpack可以要把不同的文件都转成JS文件,比如CSS、ES6/7、JSX等
+loader特点，希望单一，通过使用不同的Loader，Webpack可以要把不同的文件都转成JS文件,比如CSS、ES6/7、JSX等
 
 - test：匹配处理文件的扩展名的正则表达式
 - use：loader名称，就是你要使用模块的名称
@@ -256,12 +257,20 @@ npm install style-loader css-loader less less-loader node-sass sass-loader -D
 
 配置加载器(规则)
 
+css-loader 支持 @import这种语法的，解析路径之类
+
+style-loader 就是把css插入到Head的标签中
+
+loader的顺序，默认是从右向左执行，从下到上执行
+
+loader还可以写成对象方式
+
 ```javascript
     module: {
         // 抽离样式文件，抽离出以link标签的形式引入
         // extract-text-webpack-plugin@next
         // mini-css-extract-plugin 有bug
-        rules: [
+        rules: [// 规则
             {
                 test: /\.css$/,
                 use: cssExtract.extract({
@@ -281,20 +290,41 @@ npm install style-loader css-loader less less-loader node-sass sass-loader -D
                     ]
                 })
             },
-            { test: /\.(scss|sass)$/, use: ['style-loader', 'css-loader', 'sass-loader'] }
+            { test: /\.(scss|sass)$/, use: ['style-loader', 'css-loader', 'sass-loader'] },
+            { test: /\.css$/, use: [
+                {
+                	loader:'style-loader',
+                    options:{
+                        insertAt:'top', //style标签会插到上面
+                    }
+            	},
+                'css-loader'
+            ] },
+            { test: /\.less$/, use: [
+                {
+                	loader:'style-loader',
+                    options:{
+                        insertAt:'top', //style标签会插到上面
+                    }
+            	},
+                'css-loader',
+                'less-;pader' //把less转换为css
+            ] },
         ]
     },
 ```
 
-####抽离样式文件
+####抽离样式文件 mini-css-extract-plugin
 
 上面打包加载后的css文件是以行内样式style的标签写进打包后的html页面中，如果样式很多的话，我们更希望直接用link的方式引入进去，这时候需要把css拆分出来。
 
-        // 抽离样式文件，抽离出以link标签的形式引入
+```javascript
+    // 抽离样式文件，抽离出以link标签的形式引入
 
-        // extract-text-webpack-plugin@next
+    // extract-text-webpack-plugin@next
 
-        // mini-css-extract-plugin 有bug
+    // mini-css-extract-plugin 有bug
+```
 
 安装，因为当前版本只支持webpack3，所以要加个@next
 
@@ -318,5 +348,169 @@ let ExtractTextWebpackPlugin =  require('extract-text-webpack-plugin');
 
    plugins: [
 +        new ExtractTextWebpackPlugin('css/index.css'),
+```
+
+现在用这个mini-css-extract-plugin 
+
+需要自己压缩文件optimize-css-assets-webpack-plugin，用了这个JS不会压缩，需要再用uglifyjs-webpack-plugin
+
+```javascript
+yarn add mini-css-extract-plugin 
+yarn add optimize-css-assets-webpack-plugin -D
+yarn add uglifyjs-webpack-plugin -D
+```
+
+```javascript
+let path=require('path');
+let HtmlWebpackPlugin=require('html-webpack-plugin')
+let MiniCssExtractPlug=require('yarn add mini-css-extract-plugin');
+let OptimizeCss=require('optimize-css-assets-webpack-plugin');
+let UglifyJsPlugin=require('uglifyjs-webpack-plugin')
+
+module.exports={
+    optimization:{ //优化项
+        minimizer:[
+            new UglifyJsPlugin({
+                cache:true,
+                parallel:true, //是否并发打包，一起打包多个
+                sourceMap:true
+            }),
+            new OptimizeCss()
+        ]
+    },
+    module: {
+        rules: [// 规则
+            {
+                test: /\.css$/,
+                use:[
+                    MiniCssExtractPlugin.loader, 
+                    'css-loader'
+                ]
+            }
+        ]
+    },
+    plugins: [
+        new MiniCssExtractPlug({
+            filename:'main.css',
+
+        })
+    ],
+}
+
+```
+
+#### 自动加前缀 autoprefixer
+
+yarn add postcss-loader autoprefixer
+
+```javascript
+let MiniCssExtractPlug=require('yarn add mini-css-extract-plugin');
+
+module: {
+    rules: [// 规则
+        {
+            test: /\.css$/,
+            use:[
+                MiniCssExtractPlugin.loader, 
+                'css-loader',
+                'postcss-loader',
+            ]
+        },
+        {
+            test: /\.less$/,
+            use:[
+                MiniCssExtractPlugin.loader, 
+                'css-loader',
+                'postcss-loader',
+                'less-loader'
+            ]
+        }
+    ]
+},
+```
+
+postcss.config.js 还需要配置文件
+
+```javascript
+module.exports={
+    plugins:[require('autoprefixer')]
+}
+```
+
+### 转化ES6语法 babel
+
+babel-loader 进行转换的
+
+@babel/core核心模块，
+
+@babel/preset-env 转化模块，可以把高级语法转换成低级语法
+
+promise和gener不会转换，需要用个包@babel/plugin-transform-runtime和@babel/runtime和@babel/-polyfill(实现一些es7语法)
+
+```javascript
+yarn add babel-loader @babel/core @babel/preset-env -D
+yarn add @babel/plugin-proposal-decorators -D
+yarn add @babel/plugin-transform-runtime -D
+yarn add @babel/runtime
+yarn add @babel/polyfill
+```
+
+```javascript
+module: {
+    rules: [// 规则
+        {
+            test: /\.js$/, // normal普通的loader
+            use:{
+				loader:'babel-loader',
+                options:{ //用babel-loader把es6转换成es5
+                    presets:[ //预设
+                    	'@babel/preset-env'
+                    ],
+            		plugins:[
+                        //处理class类
+                        ['@babel/plugin-proposal-decorators',{'legacy':true}],
+                        ['@babel/plugin-proposal-class-properties',{"loose":true}],
+                        "@babel/plugin-transform-runtime"
+            		]
+                }
+            },
+            // 只找src里的 包括
+            include:path.resolve(_dirname,'src'),
+            // 排除
+            exclude:/node_modules/
+        },
+    ]
+},
+```
+
+```javascript
+require('@babel/polyfill')
+
+'aaa'.includes('a')
+```
+
+### 校验代码 ESLint
+
+可以在官网选择配置好，下载.eslintrc.json文件，放入项目中
+
+```
+yarn add eslint eslint-loader
+```
+
+```javascript
+module: {
+    rules: [// 规则loader默认是从右边向左执行，从下到上，所以这个应该写到下面，或者可以使用enforce强制先执行
+        {
+            test: /\.js$/,
+            use:{
+                loader:'eslint-loader',
+                options:{
+                    enforce:'pre',// previous
+                }
+            }
+        },
+		// ...
+    ]
+},
 ```
 

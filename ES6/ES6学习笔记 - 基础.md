@@ -24,21 +24,21 @@
    var num=12;
    var num=13;
    console.log(num) //13
-
+   
    let str='声明';
    let str='声明2';
    console.log(str) //报错，上面代码也不会执行。说明在JS代码执行之前就已经知道有重复声明的了，也就是浏览器依然存在类似于变量提升的机制：在JS代码执行之前先把所有let声明的变量过一遍，发现重复直接报错
-
+   
    let num2=12,
        fn=function(){
          let num=13;
        }
    console.log(num); //12 当前作用域下别重复即可，不同作用域中的变量是自己私有的，名字可重复
-
+   
    let num3=12;
    num3=13
    console.log(13) //13 let不允许重复声明，但允许重复赋值
-
+   
    var num4=200;
    let num4=200; //不管你之前使用什么方式在当前作用域中声明的变量，再使用let声明都会报错
    ```
@@ -49,13 +49,15 @@
    >
    > ES6中直接报错
 
+   当前作用域内已经绑定好一个变量，这个变量在这个作用域去取的时候只会在当前作用域寻找。
+
    ``` javascript
    "use strict";
    console.log(typeof num); //undefined 当前变量不存在，但使用typeof检测的时候，不会提示错误
-
+   
    console.log(typeof num); //报错 ES6中检测一个没有被声明过的变量直接报错
    let num;
-
+   
    let num;
    console.log(typeof num); //undefined 只声明没有定义（赋值），默认值是undefined
    ```
@@ -90,15 +92,15 @@
    ```javascript
    if(10>=10){ let total = 100;}
    console.log(total) //报错 判断体也是一个块级作用域，在这个作用域中声明的变量是私有变量，在块级作用域外无法使用（每一次循环都会形成一个新的块级作用域。当前案例形成五个块级作用域，每一个块级作用域中都有一个私有变量i，分别存储的是0~4）
-
+   
    for(let i = 0;i<5;i++){
      console.log(i)
    }
    console.log(i) //报错 循环体也是一个块级作用域
-
+   
    { let i =12}
    console.log(i) //报错 这是ES6中标准的块级作用域
-
+   
    let i=10;
    {
      let i=20;
@@ -109,7 +111,7 @@
        let i =30;   
      }
    }
-
+   
    try{
      let i=100;
    }catch(e){
