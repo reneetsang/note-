@@ -1025,7 +1025,7 @@ ReactDOM.render(<Temp/>,root)
 
 
 
-- componentWillReceiverProps:父组件把传递给子组件的属性发生改变后触发的钩子函数
+- componentWillReceiveProps:父组件把传递给子组件的属性发生改变后触发的钩子函数
 
 **[卸载：原有渲染的内容是不消失的，只不过以后不能基于数据改变视图了]**
 

@@ -81,7 +81,7 @@ export default window.appLocale;
 
 有了这些资源文件以及相关的封装之后，我们就可以在 `InltProvider` 中使用了。
 
-------
+### 使用
 
 在 React 專案中可以透過 Yahoo Open Source 的 React-intl 專案來幫忙，第一種是用 Component 來定義字串，像是這樣：
 
@@ -116,3 +116,10 @@ this.props.intl.formatMessage(...);
 接下來就可以對這些抽取出來的字串進行操作、翻譯、合併、轉換。
 
 **IntlProvider中的属性变更并不会触发FormattedMessage重新渲染，刚开始想要forceUpdate强制更新组件，后来上网查了一个解决方案，在组件中加入key，就能解决这个问题**
+
+在使用key来强制触发更新，对于一般简单的网站或前端系统来说，到这一步就可以了。
+
+万恶的但是，由于接手的系统过于复杂，使用key强制触发组件更新时，会引起此`<IntlProvider>`包裹下的所有组件全部被更新，导致类似于页面整体被刷新的效果，从而出现websocket重连、数据丢失等一系列问题，由于不便于动用其他模块，思考过后剩下两种方案：
+
+1. 语言切换时给予相应提示，然后跳转到欢迎界面，这样重新进入各子系统时会重新发起各种连接。由于并不会经常切换语言，而且语言切换一般也就是发生在刚进入系统的时候，所以这个方案是最实用也最省力的。又是万恶的但是，由于项目背景比较复杂，上面领导的意思是像那些大型网站一样“无缝”切换中英文，一跳转就“有缝”了。。根本不考虑一个网站和一个大型B/S系统的差异，于是在需求降级可能性微乎其微的条件下，这个最合适的方案也只能作为紧急备用方案了。
+2. 修改 react-intl 库，需要包装库中用到的每个方法，将数据源由Context改为redux的store。做的时候发现基本只是在处理字符串，就干脆去掉了 react-intl 库的依赖，手写了个类似于intl库中的 `<FormattedMessage>` 组件，使用的时候又发现只能用于组件的局限性，又参考阿里的 [react-intl-universal](https://link.juejin.im?target=https%3A%2F%2Fgithub.com%2Falibaba%2Freact-intl-universal) ，写了个直接由key生成翻译文本的方法。而这个方案目前还在完善和测试中。
