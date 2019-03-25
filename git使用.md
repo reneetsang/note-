@@ -69,8 +69,8 @@ rm:删除文件 -r递归删除 -f强制删除，一旦删除无法还原 (例如
    ```
    只需要在本地git全局幻境下配置一些信息即可
    $ git config -l
-   $ git congif --global user.name 'reneetsang'
-   $ git congif --global user.email 'reneetsang@163.com'
+   $ git config --global user.name 'reneetsang'
+   $ git config --global user.email 'reneetsang@163.com'
    ```
 
 2. 真实项目中，并不是所有的文件都和项目有关系（例如：.idea是WS生成的配置文件夹和项目没有关系），也不是所有的文件都提交（例如：node_modules中的内容太大了，也不需要提交）
@@ -151,8 +151,8 @@ git log –pretty=oneline 显示简短的历史记录
 推送：$ git add.
 
 	    $ git commit -m ''
-
-            $ git push origin master 
+	
+	        $ git push origin master 
 
 冲突合并：
 
