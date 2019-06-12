@@ -7,10 +7,36 @@
 model是一个对象，提供了注册model方法app.model({})，取消注册方法app.unmodel(namespace)，需要特别注意的是： 取消 model 注册，清理 reducers, effects 和 subscriptions。subscription 如果没有返回 unlisten 函数，使用 app.unmodel 会给予警告。model里面包括以下五部分：namespace、state、reducers、effects、subscriptions，缺一不可。注意，这里也需要从service层导入相应的方法。
 
 - namespace 命名空间，它就是以前的combineReducers里面的key
+
 - state 相当于原生`React`中的`state`状态，用于存放数据的初始值。
+
 - reducers 一个对象，用于存放能够改变`view`的`action`，里面放react-redux里的dispatch函数，我们触发同步的action，然后经过reducers里对应的函数处理，然后更新store。这里不应该做数据的处理，只是用来`return state`，从而改变`view`层的展示。
+
 - effects 对象，称为副作用。用于和后台交互，是处理异步数据逻辑的地方。当我们在开发的时候如果有异步的操作，会先出发effects里的函数，然后拿到结果以后再出发reducers里的同步函数对store进行CRUD
+
 - subscriptions 对象，订阅监听，比如监听路由，进入页面如何如何，就可以在这里处理。相当于原生`React`中的`componentWillMount`方法。就比如上述代码，监听/project路由，进入该路由页面后，将发起`getAllProjects aciton`，获取页面数据。
+
+  query、update 前面的 * 号，表示这个方法是一个 Generator函数
+
+  subscriptions：用于添加一个监听器
+
+  effects：异步执行 dispatch，用于发起异步请求 
+
+  - call 是调用执行一个函数 (调用service里面的方法)
+
+  - put 则是相当于 dispatch 执行一个 action
+
+  - select 则可以用来访问其它 model
+
+    ```javascript
+    const num = yield select(state => state.num) //这里就获取到了当前state中的数据num
+    //方式二： const num = yield select(({num}) =>num)
+    //方式三： const num = yield select(_ =>_.num)
+    ```
+
+  reducers：同步请求，主要用来改变state
+
+  
 
 ```react
 import React,{Component} from 'react'
@@ -106,6 +132,42 @@ app.router((history,app)=>{
 
 })
 ```
+
+
+
+model
+
+- Namespace : ‘userDate’ // 相当于整个store的state上的命名空间  例如 state.userDate
+
+- State: 初始化state 相当于 每个命名空间上的初始化state  
+
+  State:{
+
+  Name:’123’, 
+
+  Age:19
+
+  }
+
+  对应着store上的
+
+  state.userDate:{
+
+  Name:’123’, 
+
+  Age:19
+
+  }
+
+- subscriptions // key:value格式的对象,value是函数,这个其实是当store的dispatch触发时,会自动触发subscriptions 内的函数,subscriptions 相当于发布订阅模式中的订阅事件
+
+- effects // redux-saga处理函数 使用dispatch action:{type:xxx,payload:{}}触发 副作用 key:value形式的对象,但是里面都是genenator函数,专门处理异步请求的,所有的副作用都在这里面处理,除了异步请求,其他诸如 new Date()等等这些操作都放在effects中, 在effects中,我们不会更改状态,需要更改状态时,我们将dispatch新的action,交给reducer去处理,并且改变store中的state.userDate
+
+- reducers 处理同步操作,里面的函数全部都是纯函数,不会改变传入的值,不会有副作用,输入相同时,无论什么情况下,输出也想同,他的返回值是新的state.userDate
+
+services
+
+Services是专门用来处理数据的模块,每个文件里面都是导出一个个方法(一般是异步请求的api方法),专门提供给 models里面的effects使用
 
 ### service层
 

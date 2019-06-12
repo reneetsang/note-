@@ -64,7 +64,7 @@ buffer.write('前',0,3,'utf8');
 buffer.write('端',3,3,'utf8'); //前端
 ```
 
-###buffer.slice 
+### buffer.slice 
 
 - buf.slice([start[, end]])  slice是浅拷贝 
 

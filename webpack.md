@@ -68,7 +68,7 @@ $ npx webpack --mode develop //开发模式，不会压缩文件
 
   ```
 
-###配置文件webpack.config.js和相关插件
+### 配置文件webpack.config.js和相关插件
 
 默认情况下文件名就叫webpack.config.js，webpack是基于node的 用的语法commonjs规范
 
@@ -314,7 +314,7 @@ loader还可以写成对象方式
     },
 ```
 
-####抽离样式文件 mini-css-extract-plugin
+#### 抽离样式文件 mini-css-extract-plugin
 
 上面打包加载后的css文件是以行内样式style的标签写进打包后的html页面中，如果样式很多的话，我们更希望直接用link的方式引入进去，这时候需要把css拆分出来。
 
@@ -349,6 +349,8 @@ let ExtractTextWebpackPlugin =  require('extract-text-webpack-plugin');
    plugins: [
 +        new ExtractTextWebpackPlugin('css/index.css'),
 ```
+
+#### mini-css-extract-plugin
 
 现在用这个mini-css-extract-plugin 
 
@@ -513,4 +515,6 @@ module: {
     ]
 },
 ```
+
+
 
