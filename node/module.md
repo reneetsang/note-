@@ -59,7 +59,7 @@ let path=require('path')
 console.log(path.resolve(__dirname,'a')) //解析绝对路径
 console.log(path.join(__dirname,'a')) 
 //区别
-console.log(path.resolve('b','a')) //解析绝对路径
+console.log(path.resolve('b','a')) //解析绝对路径 如f:\学习\b\a
 console.log(path.join('b','a')) //b\a 只单单拼路径用，可以传递多个参数 
 
 //获取基本路径
