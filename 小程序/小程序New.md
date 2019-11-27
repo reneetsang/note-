@@ -137,7 +137,7 @@ Page({
     onLoad:function(options){
         // 授权过了就不要需要再授权 如果要做登录还是要发给后台
         // 判断是否授权过了
-        wx.getSetting({
+        wx.getSetting({ // 获取用户的当前设置
             success:(res)=>{
                 console.log(res)
                 if(res.authSetting['scope.userinfo']){ // 如果授权过了
