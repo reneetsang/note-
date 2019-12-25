@@ -91,25 +91,23 @@ class App extends React.Component<any, any> {
 
 ## 三、注意事项
 
-- **只能在****函数内部的最外层****调用 Hook，不要在循环、条件判断或者子函数中调用**
-- **只能在 React 的****函数组件****中调用 Hook，不要在其他 JavaScript 函数中调用**
+- 只能在函数内部的最外层调用 Hook，不要在循环、条件判断或者子函数中调用
+- 只能在 React 的**函数组件**中调用 Hook，不要在其他 JavaScript 函数中调用
 - [**https://reactjs.org/warnings/invalid-hook-call-warning.html**](https://reactjs.org/warnings/invalid-hook-call-warning.html)
 
 
 
 ## 四、useState & useMemo & useCallback 
 
-- **React 假设当你多次调用 useState 的时候，你能保证每次渲染时它们的****调用顺序****是不变的。**
-- 通过在函数组件里调用它来给组件添加一些内部 state，React **会在重复渲染时保留这个 state**
+- React 假设当你多次调用 useState 的时候，你能保证每次渲染时它们的调用顺序是不变的。
+- 通过在函数组件里调用它来给组件添加一些内部 state，React 会在重复渲染时保留这个 state
 - useState 唯一的参数就是初始 state
-- **useState 会返回****一个****数组****：一个 state，一个更新 state 的函数**
+- useState 会返回一个数组：一个 state，一个更新 state 的函数
 
 - - 在初始化渲染期间，返回的状态 (state) 与传入的第一个参数 (initialState) 值相同
-  - 你可以在事件处理函数中或其他一些地方调用这个函数。它类似 class 组件的 this.setState，但是它**不会把新的 state 和旧的 state 进行合并，而是直接替换**
+  - 你可以在事件处理函数中或其他一些地方调用这个函数。它类似 class 组件的 this.setState，但是它不会把新的 state 和旧的 state 进行合并，而是直接**替换**
 
-
-
-```
+```react
 // 这里可以任意命名，因为返回的是数组，数组解构
 const [state, setState] = useState(initialState);
 ```
@@ -185,8 +183,6 @@ ReactDOM.render(<Parent />, rootElement);
 - 每一次渲染都有它自己的事件处理函数
 - 当点击更新状态的时候，函数组件都会重新被调用，那么每次渲染都是独立的，取到的值不会受后面操作的影响
 
-
-
 ```react
 function Counter2(){
   let [number,setNumber] = useState(0);
@@ -210,9 +206,7 @@ function Counter2(){
 
 ### 4.3 函数式更新
 
-- **如果新的 state 需要通过使用先前的 state 计算得出，那么可以将回调函数当做参数传递给 setState。****该****回调****函数将接收先前的 state，并返回一个更新后的值。**
-
-
+- 如果新的 state 需要通过使用先前的 state 计算得出，那么可以将回调函数当做参数传递给 setState。该回调函数将接收先前的 state，并返回一个更新后的值。
 
 ```react
 function Counter(){
@@ -241,8 +235,6 @@ function Counter(){
 - **initialState 参数只会在组件的初始化渲染中起作用，后续渲染时会被忽略**
 - **如果初始 state 需要通过复杂计算获得，则可以传入一个函数，在函数中计算并返回初始的 state，此函数只在初始渲染时被调用**
 
-
-
 ```react
 function Counter5(props){
     console.log('Counter5 render');
@@ -269,9 +261,7 @@ function Counter5(props){
 
 - Hook 内部使用 Object.is 来比较新/旧 state 是否相等
 - **与 class 组件中的 setState 方法不同，如果你修改状态的时候，传的状态值没有变化，则不重新渲染**
-- **与 class 组件中的 setState 方法不同，useState 不会自动合并更新对象。你可以用函数式的 setState 结合展开运算符来达到合并更新对象****的效果**
-
-
+- **与 class 组件中的 setState 方法不同，useState 不会自动合并更新对象。你可以用函数式的 setState 结合展开运算符来达到合并更新对象的效果**
 
 ```react
 function Counter(){
@@ -298,7 +288,7 @@ function Counter(){
 1. 1. **类组件：**可以使用 `pureComponent` ；
    2. **函数****组件：**使用 `React.memo` ，将函数组件传递给 `memo` 之后，就会返回一个新的组件，新组件的功能：**如果接受到的属性不变，则不重新渲染函数**；
 
-- **但是怎么保证属性不会变尼？****这里****使用 useState ，每次更新都是独立的**，`const [number,setNumber] = useState(0)` **也就是说每次都会生成一个新的值（哪怕这个值没有变化），即使使用了** `React.memo` ，**也还是会重新渲染**
+- **但是怎么保证属性不会变呢？这里使用 useState ，每次更新都是独立的**，`const [number,setNumber] = useState(0)` **也就是说每次都会生成一个新的值（哪怕这个值没有变化），即使使用了** `React.memo` ，**也还是会重新渲染**
 - 
 
 ```react
@@ -334,8 +324,6 @@ export  default  function Counter6(){
 
 1. 1. **useCallback：**接收一个内联回调函数参数和一个依赖项数组（子组件依赖父组件的状态，即子组件会使用到父组件的值） ，useCallback 会返回该回调函数的 memoized 版本，该回调函数仅在某个依赖项改变时才会更新
    2. **useMemo：**把创建函数和依赖项数组作为参数传入 `useMemo`，它仅会在某个依赖项改变时才重新计算 memoized 值。这种优化有助于避免在每次渲染时都进行高开销的计算
-
-
 
 ```react
 import React,{useState,memo,useMemo,useCallback} from 'react';
@@ -557,11 +545,11 @@ ReactDOM.render(<Counter  />, document.getElementById('root'));
 
 ## 七、useEffect
 
-- **effect（副作用）：指****那些没有发生在数据向视图转换过程中的逻辑，如** **`ajax`** **请求、访问原生** `dom` **元素、本地持久化缓存、绑定/解绑事件、****添加订阅、设置定时器、记录日志****等。**
-- **副作用操作****可以分两****类：****需要清除的和不需要清除的****。**
-- **原先在****函数组件****内（这里指在 React 渲染阶段）改变** **dom** **、发送 ajax 请求以及执行其他包含副作用的操作都是不被允许的，因为这可能会产生莫名其妙的 bug 并破坏 UI 的一致性**
+- effect（副作用）：指那些没有发生在数据向视图转换过程中的逻辑，如`ajax` 请求、访问原生 `dom` 元素、本地持久化缓存、绑定/解绑事件、添加订阅、设置定时器、记录日志等。
+- 副作用操作可以分两类：需要清除的和不需要清除的。
+- 原先在**函数组件**内（这里指在 React 渲染阶段）改变 dom 、发送 ajax 请求以及执行其他包含副作用的操作都是不被允许的，因为这可能会产生莫名其妙的 bug 并破坏 UI 的一致性
 - useEffect 就是一个 Effect Hook，给函数组件增加了操作副作用的能力。它跟 class 组件中的 `componentDidMount`、`componentDidUpdate` 和 `componentWillUnmount` 具有相同的用途，只不过被合并成了一个 API
-- **useEffect 接收一个函数，****该函数会****在****组件渲染到屏幕之后才执行****，该****函数有要求：要么返回一个能清除副作用的函数，要么就不返回任何内容**
+- useEffect 接收一个函数，该函数会在组件渲染到屏幕之后才执行，该函数有要求：要么返回一个能清除副作用的函数，要么就不返回任何内容**
 - 与 `componentDidMount` 或 `componentDidUpdate` 不同，使用 useEffect 调度的 effect 不会阻塞浏览器更新屏幕，这让你的应用看起来响应更快。大多数情况下，effect 不需要同步地执行。在个别情况下（例如测量布局），有单独的 useLayoutEffect Hook 供你使用，其 API 与 useEffect 相同。
 
 
@@ -570,7 +558,7 @@ ReactDOM.render(<Counter  />, document.getElementById('root'));
 
 ### 7.1 使用 class 组件实现修改标题
 
-- 在这个 class 中，我们需要在两个生命周期函数中编写重复的代码，这是因为很多情况下，我们希望在组件加载和更新时执行同样的操作。我们希望它在每次渲染之后执行，但 React 的 class 组件没有提供这样的方法。即使我们提取出一个方法，我们还是要在两个地方调用它。而 **u****seEffect 会在第一次渲染之后和每次更新之后都会执行**
+- 在这个 class 中，我们需要在两个生命周期函数中编写重复的代码，这是因为很多情况下，我们希望在组件加载和更新时执行同样的操作。我们希望它在每次渲染之后执行，但 React 的 class 组件没有提供这样的方法。即使我们提取出一个方法，我们还是要在两个地方调用它。而 useEffect 会在第一次渲染之后和每次更新之后都会执行
 
 ```react
 class Counter extends React.Component{
@@ -628,7 +616,7 @@ ReactDOM.render(<Counter />, document.getElementById('root'));
 
 ### 7.3 清除副作用
 
-- **副作用函数还可以通过返回一个函数来指定如何清除副作用，为防止内存泄漏，清除函数会在****组件卸载前****执行。如果组件多次渲染，则在执行下一个 effect 之前，上一个 effect 就已被清除。**
+- 副作用函数还可以通过返回一个函数来指定如何清除副作用，为防止内存泄漏，清除函数会在组件卸载前执行。如果组件多次渲染，则在执行下一个 effect 之前，上一个 effect 就已被清除。
 
 ```react
 function Counter(){
