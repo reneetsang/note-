@@ -389,7 +389,7 @@ export default function (actions,dispatch) {
 
 
 
-###combineReducers
+### combineReducers
 
 因为redux只有一个状态树，即一个reducer，组件都是不同的状态，只能把这些动作都发给统一的仓库，统一的reducer来处理 
 
